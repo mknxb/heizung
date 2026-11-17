@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heizung · ETA SH</title>
+<style>
+:root{--bg:#141413;--surface:#1c1c1a;--surface2:#232320;--border:#33322e;--t1:#f0efec;--t2:#c3c2b7;--t3:#8a8980;
+--holz:#eb6834;--pellet:#eda100;--solar:#1baf7a;--blau:#3987e5;--rot:#e66767;--radius:14px}
+:root[data-theme="light"]{--bg:#f4f3ef;--surface:#fcfcfb;--surface2:#f0efea;--border:#e2e0d8;--t1:#15140f;--t2:#52514e;--t3:#86857c;
+--holz:#d95926;--pellet:#c98500;--solar:#199e70;--blau:#2a78d6;--rot:#e34948}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t1);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;padding:24px 16px 60px}
+.wrap{max-width:1100px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+h1{font-size:22px;font-weight:650;letter-spacing:-.01em}.sub{color:var(--t3);font-size:13px;margin-top:3px}
+.toggle{background:var(--surface);border:1px solid var(--border);color:var(--t2);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer}
+section{margin-top:24px}
+.sec-h{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:12px;font-weight:600}
+.grid{display:grid;gap:14px}.two{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+@media(max-width:720px){.two{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.chart-title{font-size:14px;font-weight:600;margin-bottom:2px}.chart-sub{font-size:12px;color:var(--t3);margin-bottom:14px}
+.kpi .v{font-size:24px;font-weight:650;letter-spacing:-.02em;line-height:1.1}.kpi .v small{font-size:13px;color:var(--t3);margin-left:3px}
+.kpi .l{color:var(--t2);font-size:12.5px;margin-top:5px}.accent{height:3px;width:28px;border-radius:2px;margin-bottom:11px}
+.strat{display:flex;flex-direction:column;gap:4px}.layer{display:flex;align-items:center;gap:10px}
+.ln{width:96px;font-size:12px;color:var(--t2)}.lt{width:52px;text-align:right;font-weight:600;font-size:13px}.lbar{flex:1;height:18px;border-radius:4px}
+.livebig{display:flex;gap:18px;flex-wrap:wrap}.livebig .b{flex:1;min-width:84px}.livebig .bv{font-size:20px;font-weight:650}.livebig .bl{font-size:12px;color:var(--t3)}
+svg{display:block;width:100%;overflow:visible}.lbl{fill:var(--t3);font-size:10.5px}.gridline{stroke:var(--border);stroke-dasharray:2 3;opacity:.6}
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;color:var(--t2);font-size:12.5px;padding:5px 12px;border-radius:999px;cursor:pointer}
+.seg button.on{background:var(--blau);color:#fff}
+.tt{position:fixed;pointer-events:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--t1);box-shadow:0 6px 24px rgba(0,0,0,.3);opacity:0;transition:opacity .1s;z-index:10;white-space:nowrap}
+.src{color:var(--t3);font-size:11px;margin-top:10px}.foot{color:var(--t3);font-size:12px;margin-top:36px;border-top:1px solid var(--border);padding-top:16px}
+.err{background:var(--surface);border:1px solid var(--rot);border-radius:var(--radius);padding:16px;color:var(--t2)}
+.row2{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+</style></head>
+<body><div class="wrap">
+<header><div><h1>Heizung · ETA SH</h1><div class="sub" id="period">lädt …</div></div>
+<button class="toggle" id="themeBtn">☀︎ Hell</button></header>
+<div id="app"></div>
+<div class="foot" id="foot"></div>
+</div><div class="tt" id="tt"></div>
+<script>
+const DATA_URL="./data/eta_dashboard.json";
+const tt=document.getElementById('tt');
+const de=n=>(n==null?'–':(typeof n==='number'?n.toLocaleString('de-DE'):n));
+function showTT(e,h){tt.innerHTML=h;tt.style.opacity=1;let x=e.clientX+14,y=e.clientY+14;if(x+tt.offsetWidth>innerWidth)x=e.clientX-tt.offsetWidth-14;tt.style.left=x+'px';tt.style.top=y+'px';}
+function hideTT(){tt.style.opacity=0;}
+let D=null, gran='tag', metric='aktiv_h';
+
+function lineChart(el,pts,{yl,color,fmt,unit,bar}){
+ const W=el.clientWidth||520,H=200,m={t:10,r:14,b:26,l:40};
+ const ys=pts.map(p=>p.y==null?0:p.y);
+ const ymin=Math.min(...ys,0),ymax=Math.max(...ys,1),lo=ymin,hi=ymax+(ymax-ymin)*0.12||1;
+ const X=i=>m.l+(W-m.l-m.r)*(i/(pts.length-1||1)),Y=v=>m.t+(H-m.t-m.b)*(1-(v-lo)/(hi-lo||1));
+ let g='';for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);g+=`<line class="gridline" x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}"/><text class="lbl" x="${m.l-6}" y="${y+3}" text-anchor="end">${fmt?fmt(v):Math.round(v)}</text>`;}
+ const step=Math.max(1,Math.ceil(pts.length/7));
+ for(let i=0;i<pts.length;i+=step)g+=`<text class="lbl" x="${X(i)}" y="${H-7}" text-anchor="middle">${pts[i].x}</text>`;
+ if(bar){const bw=(W-m.l-m.r)/pts.length;pts.forEach((p,i)=>{if(p.y){const h=(H-m.t-m.b)-(Y(p.y)-m.t);g+=`<rect x="${m.l+(W-m.l-m.r)*(i/pts.length)+bw*0.15}" y="${Y(p.y)}" width="${bw*0.7}" height="${Math.max(h,0)}" rx="2" fill="var(${color})"/>`;}g+=`<rect x="${m.l+(W-m.l-m.r)*(i/pts.length)}" y="${m.t}" width="${bw}" height="${H-m.t-m.b}" fill="transparent" data-i="${i}"/>`;});}
+ else{const dl=pts.map((p,i)=>(i?'L':'M')+X(i)+' '+Y(p.y==null?lo:p.y)).join(' ');g+=`<path d="${dl}" fill="none" stroke="var(${color})" stroke-width="2"/>`;pts.forEach((p,i)=>{g+=`<circle cx="${X(i)}" cy="${Y(p.y==null?lo:p.y)}" r="7" fill="transparent" data-i="${i}"/><circle cx="${X(i)}" cy="${Y(p.y==null?lo:p.y)}" r="2.3" fill="var(${color})"/>`;});}
+ el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+ el.querySelectorAll('[data-i]').forEach(c=>{const p=pts[+c.dataset.i];c.addEventListener('mousemove',e=>showTT(e,`<b>${p.full||p.x}</b><br>${yl}: ${de(p.y)} ${unit||''}`));c.addEventListener('mouseleave',hideTT);});}
+
+function render(){
+ if(!D)return;
+ document.getElementById('period').textContent='Stand '+(D.live.ts||D.generated)+'  ·  Daten '+D.span.start+' – '+D.span.end;
+ const L=D.live,C=D.counters;
+ const sens=['Fühler 1 (oben)','Fühler 2','Fühler 3','Fühler 4','Fühler 5 (unten)'];
+ const temps=L.puffer||[];const vals=temps.filter(x=>x!=null);const mx=Math.max(...vals,70),mn=20;
+ const strat=sens.map((n,i)=>{const t=temps[i];if(t==null)return '';const w=Math.max((t-mn)/(mx-mn)*100,4);
+   return `<div class="layer"><span class="ln">${n}</span><div class="lbar" style="width:${w}%;background:linear-gradient(90deg,var(--blau),var(--holz));opacity:${0.35+0.65*(t-mn)/(mx-mn)}"></div><span class="lt">${de(t)}°</span></div>`;}).join('');
+ const kpis=[
+  ['Pelletvorrat',de(L.lager_vorrat),'kg','--pellet'],
+  ['Zündungen gesamt',de(C.zuendungen),'','--blau'],
+  ['Übertemperatur',de(C.uebertemp),'','--rot'],
+  ['STB-Auslösung',de(C.stb),'','--rot'],
+  ['Volllaststunden',de(C.volllaststd),'','--holz'],
+ ];
+ document.getElementById('app').innerHTML=`
+ <section><div class="sec-h">Live-Zustand</div>
+  <div class="grid two">
+   <div class="card"><div class="chart-title">Pufferschichtung · 5 Fühler</div><div class="chart-sub">Ladung ${de(L.puffer_ladung)} %</div><div class="strat">${strat||'<div class=src>keine Fühlerdaten</div>'}</div></div>
+   <div class="card"><div class="chart-title">Solar & Kessel</div><div class="chart-sub">live aus der Anlage</div>
+     <div class="livebig">
+      <div class="b"><div class="bv" style="color:var(--solar)">${de(L.kollektor)}°</div><div class="bl">Kollektor</div></div>
+      <div class="b"><div class="bv">${de(L.solar_heute)}</div><div class="bl">Solar heute kWh</div></div>
+      <div class="b"><div class="bv">${de(L.kessel)}°</div><div class="bl">Kessel</div></div>
+      <div class="b"><div class="bv">${de(L.aussen)}°</div><div class="bl">Außen</div></div>
+     </div>
+     <div class="src">Solar gesamt (Zähler): ${de(L.solar_total)} kWh · HK-Vorlauf ${de(L.hk_vorlauf)}° · FB-Vorlauf ${de(L.fb_vorlauf)}°</div>
+   </div>
+  </div></section>
+ <section><div class="sec-h">Kennzahlen</div><div class="grid kpis">${kpis.map(k=>`<div class="card kpi"><div class="accent" style="background:var(${k[3]})"></div><div class="v">${k[1]}<small>${k[2]}</small></div><div class="l">${k[0]}</div></div>`).join('')}</div></section>
+ <section><div class="sec-h">Zeitverlauf</div><div class="card">
+   <div class="row2"><div class="seg" id="granSeg"></div><div class="seg" id="metSeg"></div></div>
+   <div class="chart-title" id="tsTitle"></div><div class="chart-sub" id="tsSub"></div><div id="tsChart"></div>
+ </div></section>`;
+ const GRAN=[['tag','Tag'],['woche','Woche'],['monat','Monat']];
+ const MET={aktiv_h:{t:'Brennerstunden',u:'h',c:'--holz',bar:true,fmt:v=>Math.round(v)},
+  aussen:{t:'Außentemperatur',u:'°C',c:'--blau',bar:false,fmt:v=>Math.round(v)+'°'},
+  solar:{t:'Solarertrag',u:'kWh',c:'--solar',bar:true,fmt:v=>Math.round(v)}};
+ document.getElementById('granSeg').innerHTML=GRAN.map(([k,l])=>`<button data-g="${k}" class="${k==gran?'on':''}">${l}</button>`).join('');
+ document.getElementById('metSeg').innerHTML=Object.entries(MET).map(([k,m])=>`<button data-m="${k}" class="${k==metric?'on':''}">${m.t}</button>`).join('');
+ function src(){const s=gran=='tag'?D.daily.map(r=>({x:r.d.slice(5),y:metric=='solar'?r.solar_heute:r[metric],full:r.d})):gran=='woche'?D.weekly.map(r=>({x:r.x,y:r[metric],full:r.x})):D.monthly.map(r=>({x:r.x.slice(5),y:r[metric],full:r.x}));return s;}
+ function draw(){const m=MET[metric];document.getElementById('tsTitle').textContent=m.t+' · '+GRAN.find(g=>g[0]==gran)[1];
+   document.getElementById('tsSub').textContent=({tag:'je Tag',woche:'je Kalenderwoche',monat:'je Monat'})[gran]+(metric=='solar'?' · füllt sich ab Logger-Start':'');
+   lineChart(document.getElementById('tsChart'),src(),{yl:m.t,color:m.c,fmt:m.fmt,unit:m.u,bar:m.bar});}
+ document.querySelectorAll('#granSeg button').forEach(b=>b.onclick=()=>{gran=b.dataset.g;document.querySelectorAll('#granSeg button').forEach(x=>x.classList.toggle('on',x.dataset.g==gran));draw();});
+ document.querySelectorAll('#metSeg button').forEach(b=>b.onclick=()=>{metric=b.dataset.m;document.querySelectorAll('#metSeg button').forEach(x=>x.classList.toggle('on',x.dataset.m==metric));draw();});
+ draw();
+ document.getElementById('foot').innerHTML='Quelle: ETA SH über lokale REST-API, gesammelt auf der NAS, veröffentlicht via GitHub Pages. JSON erzeugt '+D.generated+'. „Brennerstunden" = Minuten mit Abgasgebläse > 500 U/min. Solarertrag erscheint, sobald der Logger Tage gesammelt hat.';
+}
+fetch(DATA_URL,{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{D=j;render();addEventListener('resize',render);})
+ .catch(()=>{document.getElementById('period').textContent='';document.getElementById('app').innerHTML='<div class="err">Konnte <b>'+DATA_URL+'</b> nicht laden. Sobald die NAS die JSON ins Repo gepusht hat, erscheinen hier die Daten.</div>';});
+document.getElementById('themeBtn').onclick=()=>{const t=document.documentElement.getAttribute('data-theme')=='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);event.target.textContent=t=='dark'?'☀︎ Hell':'☾ Dunkel';render();};
+</script></body></html>
