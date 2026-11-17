@@ -4,35 +4,43 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Heizung · ETA SH</title>
 <style>
-:root{--bg:#141413;--surface:#1c1c1a;--surface2:#232320;--border:#33322e;--t1:#f0efec;--t2:#c3c2b7;--t3:#8a8980;
---holz:#eb6834;--pellet:#eda100;--solar:#1baf7a;--blau:#3987e5;--rot:#e66767;--radius:14px}
-:root[data-theme="light"]{--bg:#f4f3ef;--surface:#fcfcfb;--surface2:#f0efea;--border:#e2e0d8;--t1:#15140f;--t2:#52514e;--t3:#86857c;
---holz:#d95926;--pellet:#c98500;--solar:#199e70;--blau:#2a78d6;--rot:#e34948}
+:root{--bg:#131312;--surface:#1b1b19;--surface2:#232320;--border:#312f2b;--t1:#f2f1ee;--t2:#c2c1b6;--t3:#86857c;
+--kessel:#eb6834;--ruecklauf:#3987e5;--abgas:#e66767;--o2:#1baf7a;--mischer:#b48ee8;--pellet:#eda100;--solar:#1baf7a;--blau:#3987e5;--rot:#e66767;--r:14px}
+:root[data-theme="light"]{--bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;--border:#e3e1d9;--t1:#17160f;--t2:#50504c;--t3:#8a8980;
+--kessel:#d95926;--ruecklauf:#2a78d6;--abgas:#db4b4b;--o2:#199e70;--mischer:#8a5fd0;--pellet:#c98500;--solar:#199e70;--blau:#2a78d6;--rot:#db4b4b}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--t1);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;padding:24px 16px 60px}
-.wrap{max-width:1100px;margin:0 auto}
-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}
-h1{font-size:22px;font-weight:650;letter-spacing:-.01em}.sub{color:var(--t3);font-size:13px;margin-top:3px}
+body{background:var(--bg);color:var(--t1);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;padding:24px 16px 64px}
+.wrap{max-width:1160px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+h1{font-size:23px;font-weight:650;letter-spacing:-.01em}.sub{color:var(--t3);font-size:13px;margin-top:3px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--o2);margin-right:5px;vertical-align:middle}
 .toggle{background:var(--surface);border:1px solid var(--border);color:var(--t2);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer}
-section{margin-top:24px}
+section{margin-top:26px}
 .sec-h{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:12px;font-weight:600}
-.grid{display:grid;gap:14px}.two{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
-@media(max-width:720px){.two{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
-.chart-title{font-size:14px;font-weight:600;margin-bottom:2px}.chart-sub{font-size:12px;color:var(--t3);margin-bottom:14px}
-.kpi .v{font-size:24px;font-weight:650;letter-spacing:-.02em;line-height:1.1}.kpi .v small{font-size:13px;color:var(--t3);margin-left:3px}
-.kpi .l{color:var(--t2);font-size:12.5px;margin-top:5px}.accent{height:3px;width:28px;border-radius:2px;margin-bottom:11px}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1.1fr 1fr 1fr}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(125px,1fr))}
+@media(max-width:860px){.g3{grid-template-columns:1fr 1fr}}@media(max-width:620px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.ct{font-size:14px;font-weight:600;margin-bottom:2px}.cs{font-size:12px;color:var(--t3);margin-bottom:13px}
+.kpi .v{font-size:23px;font-weight:650;letter-spacing:-.02em;line-height:1.1}.kpi .v small{font-size:13px;color:var(--t3);margin-left:3px}
+.kpi .l{color:var(--t2);font-size:12.5px;margin-top:5px}.accent{height:3px;width:26px;border-radius:2px;margin-bottom:10px}
 .strat{display:flex;flex-direction:column;gap:4px}.layer{display:flex;align-items:center;gap:10px}
-.ln{width:96px;font-size:12px;color:var(--t2)}.lt{width:52px;text-align:right;font-weight:600;font-size:13px}.lbar{flex:1;height:18px;border-radius:4px}
-.livebig{display:flex;gap:18px;flex-wrap:wrap}.livebig .b{flex:1;min-width:84px}.livebig .bv{font-size:20px;font-weight:650}.livebig .bl{font-size:12px;color:var(--t3)}
-svg{display:block;width:100%;overflow:visible}.lbl{fill:var(--t3);font-size:10.5px}.gridline{stroke:var(--border);stroke-dasharray:2 3;opacity:.6}
+.ln{width:96px;font-size:12px;color:var(--t2)}.lt{width:50px;text-align:right;font-weight:600;font-size:13px}.lbar{flex:1;height:17px;border-radius:4px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:12px}
+.tile .tv{font-size:18px;font-weight:650;line-height:1.1}.tile .tl{font-size:11.5px;color:var(--t3);margin-top:3px}
+svg{display:block;width:100%;overflow:visible}.lbl{fill:var(--t3);font-size:10.5px}.gridline{stroke:var(--border);stroke-dasharray:2 3;opacity:.55}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--t2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}.sw{width:11px;height:3px;border-radius:2px;display:inline-block}
 .seg{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}
-.seg button{border:0;background:transparent;color:var(--t2);font-size:12.5px;padding:5px 12px;border-radius:999px;cursor:pointer}
-.seg button.on{background:var(--blau);color:#fff}
-.tt{position:fixed;pointer-events:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--t1);box-shadow:0 6px 24px rgba(0,0,0,.3);opacity:0;transition:opacity .1s;z-index:10;white-space:nowrap}
-.src{color:var(--t3);font-size:11px;margin-top:10px}.foot{color:var(--t3);font-size:12px;margin-top:36px;border-top:1px solid var(--border);padding-top:16px}
-.err{background:var(--surface);border:1px solid var(--rot);border-radius:var(--radius);padding:16px;color:var(--t2)}
+.seg button{border:0;background:transparent;color:var(--t2);font-size:12.5px;padding:5px 12px;border-radius:999px;cursor:pointer}.seg button.on{background:var(--blau);color:#fff}
 .row2{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--border)}
+th{color:var(--t3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}th:first-child,td:first-child{text-align:left}
+td.hl{color:var(--kessel);font-weight:600}
+.tt{position:fixed;pointer-events:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--t1);box-shadow:0 6px 24px rgba(0,0,0,.35);opacity:0;transition:opacity .08s;z-index:10;white-space:nowrap}
+.src{color:var(--t3);font-size:11px;margin-top:10px}.foot{color:var(--t3);font-size:12px;margin-top:38px;border-top:1px solid var(--border);padding-top:16px}
+.err{background:var(--surface);border:1px solid var(--rot);border-radius:var(--r);padding:16px;color:var(--t2)}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--t2);margin-left:8px}
 </style></head>
 <body><div class="wrap">
 <header><div><h1>Heizung · ETA SH</h1><div class="sub" id="period">lädt …</div></div>
@@ -43,79 +51,117 @@ svg{display:block;width:100%;overflow:visible}.lbl{fill:var(--t3);font-size:10.5
 <script>
 const DATA_URL="./data/eta_dashboard.json";
 const tt=document.getElementById('tt');
-const de=n=>(n==null?'–':(typeof n==='number'?n.toLocaleString('de-DE'):n));
-function showTT(e,h){tt.innerHTML=h;tt.style.opacity=1;let x=e.clientX+14,y=e.clientY+14;if(x+tt.offsetWidth>innerWidth)x=e.clientX-tt.offsetWidth-14;tt.style.left=x+'px';tt.style.top=y+'px';}
+const de=n=>(n==null||n===''?'–':(typeof n==='number'?(Math.abs(n)>=100?Math.round(n).toLocaleString('de-DE'):n.toLocaleString('de-DE',{maximumFractionDigits:1})):n));
+function showTT(e,h){tt.innerHTML=h;tt.style.opacity=1;let x=e.clientX+14,y=e.clientY+14;if(x+tt.offsetWidth>innerWidth)x=e.clientX-tt.offsetWidth-14;if(y+tt.offsetHeight>innerHeight)y=e.clientY-tt.offsetHeight-14;tt.style.left=x+'px';tt.style.top=y+'px';}
 function hideTT(){tt.style.opacity=0;}
-let D=null, gran='tag', metric='aktiv_h';
+let D=null,gran='tag',metric='aktiv_h';
 
-function lineChart(el,pts,{yl,color,fmt,unit,bar}){
- const W=el.clientWidth||520,H=200,m={t:10,r:14,b:26,l:40};
- const ys=pts.map(p=>p.y==null?0:p.y);
- const ymin=Math.min(...ys,0),ymax=Math.max(...ys,1),lo=ymin,hi=ymax+(ymax-ymin)*0.12||1;
- const X=i=>m.l+(W-m.l-m.r)*(i/(pts.length-1||1)),Y=v=>m.t+(H-m.t-m.b)*(1-(v-lo)/(hi-lo||1));
- let g='';for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);g+=`<line class="gridline" x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}"/><text class="lbl" x="${m.l-6}" y="${y+3}" text-anchor="end">${fmt?fmt(v):Math.round(v)}</text>`;}
- const step=Math.max(1,Math.ceil(pts.length/7));
- for(let i=0;i<pts.length;i+=step)g+=`<text class="lbl" x="${X(i)}" y="${H-7}" text-anchor="middle">${pts[i].x}</text>`;
- if(bar){const bw=(W-m.l-m.r)/pts.length;pts.forEach((p,i)=>{if(p.y){const h=(H-m.t-m.b)-(Y(p.y)-m.t);g+=`<rect x="${m.l+(W-m.l-m.r)*(i/pts.length)+bw*0.15}" y="${Y(p.y)}" width="${bw*0.7}" height="${Math.max(h,0)}" rx="2" fill="var(${color})"/>`;}g+=`<rect x="${m.l+(W-m.l-m.r)*(i/pts.length)}" y="${m.t}" width="${bw}" height="${H-m.t-m.b}" fill="transparent" data-i="${i}"/>`;});}
- else{const dl=pts.map((p,i)=>(i?'L':'M')+X(i)+' '+Y(p.y==null?lo:p.y)).join(' ');g+=`<path d="${dl}" fill="none" stroke="var(${color})" stroke-width="2"/>`;pts.forEach((p,i)=>{g+=`<circle cx="${X(i)}" cy="${Y(p.y==null?lo:p.y)}" r="7" fill="transparent" data-i="${i}"/><circle cx="${X(i)}" cy="${Y(p.y==null?lo:p.y)}" r="2.3" fill="var(${color})"/>`;});}
+function axis(el,H,m,lo,hi,fmt){let g='';for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=m.t+(H-m.t-m.b)*(1-(v-lo)/(hi-lo||1));g+=`<line class="gridline" x1="${m.l}" x2="W" y1="${y}" y2="${y}"/><text class="lbl" x="${m.l-6}" y="${y+3}" text-anchor="end">${fmt?fmt(v):Math.round(v)}</text>`;}return g;}
+
+function multiLine(el,rows,lines,{fmt,unit,xkey}){
+ const W=el.clientWidth||520,H=230,m={t:10,r:14,b:24,l:40};
+ const xs=rows.map((r,i)=>i);
+ let vals=[];lines.forEach(L=>rows.forEach(r=>{if(r[L.key]!=null)vals.push(r[L.key]);}));
+ if(!vals.length){el.innerHTML='<div class="src">keine Daten</div>';return;}
+ const lo=Math.min(...vals),hi=Math.max(...vals),pad=(hi-lo)*0.1||1,LO=lo-pad,HI=hi+pad;
+ const X=i=>m.l+(W-m.l-m.r)*(i/(rows.length-1||1)),Y=v=>m.t+(H-m.t-m.b)*(1-(v-LO)/(HI-LO||1));
+ let g=axis(el,H,m,LO,HI,fmt).replaceAll('x2="W"',`x2="${W-m.r}"`);
+ const step=Math.max(1,Math.ceil(rows.length/7));
+ for(let i=0;i<rows.length;i+=step)g+=`<text class="lbl" x="${X(i)}" y="${H-6}" text-anchor="middle">${rows[i][xkey]}</text>`;
+ lines.forEach(L=>{let d='',pen=false;rows.forEach((r,i)=>{if(r[L.key]==null){pen=false;return;}d+=(pen?'L':'M')+X(i)+' '+Y(r[L.key])+' ';pen=true;});g+=`<path d="${d}" fill="none" stroke="var(${L.color})" stroke-width="2"/>`;});
+ // Crosshair-Hitzonen
+ g+=`<rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="transparent" id="hit"/>`;
  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
- el.querySelectorAll('[data-i]').forEach(c=>{const p=pts[+c.dataset.i];c.addEventListener('mousemove',e=>showTT(e,`<b>${p.full||p.x}</b><br>${yl}: ${de(p.y)} ${unit||''}`));c.addEventListener('mouseleave',hideTT);});}
+ const svg=el.querySelector('svg');
+ svg.addEventListener('mousemove',e=>{const rc=svg.getBoundingClientRect();const px=(e.clientX-rc.left)/rc.width*W;let i=Math.round((px-m.l)/((W-m.l-m.r)/(rows.length-1||1)));i=Math.max(0,Math.min(rows.length-1,i));const r=rows[i];
+   let h=`<b>${r[xkey]}</b>`;lines.forEach(L=>{if(r[L.key]!=null)h+=`<br><span class="sw" style="background:var(${L.color})"></span> ${L.name}: ${de(r[L.key])}${unit||''}`;});showTT(e,h);});
+ svg.addEventListener('mouseleave',hideTT);
+ el.insertAdjacentHTML('afterend','');
+ return `<div class="legend">${lines.map(L=>`<span><span class="sw" style="background:var(${L.color})"></span>${L.name}</span>`).join('')}</div>`;
+}
+function barLine(el,pts,{yl,color,fmt,unit,bar}){
+ const W=el.clientWidth||520,H=200,m={t:10,r:12,b:24,l:40};
+ const ys=pts.map(p=>p.y==null?0:p.y),lo=Math.min(...ys,0),hi=Math.max(...ys,1)+(Math.max(...ys,1))*0.1;
+ const X=i=>m.l+(W-m.l-m.r)*(i/(pts.length-1||1)),Y=v=>m.t+(H-m.t-m.b)*(1-(v-lo)/(hi-lo||1));
+ let g=axis(el,H,m,lo,hi,fmt).replaceAll('x2="W"',`x2="${W-m.r}"`);
+ const step=Math.max(1,Math.ceil(pts.length/7));
+ if(bar){const bw=(W-m.l-m.r)/pts.length;pts.forEach((p,i)=>{if(p.y){g+=`<rect x="${m.l+(W-m.l-m.r)*(i/pts.length)+bw*0.15}" y="${Y(p.y)}" width="${bw*0.7}" height="${Math.max((H-m.t-m.b)-(Y(p.y)-m.t),0)}" rx="2" fill="var(${color})"/>`;}g+=`<rect x="${m.l+(W-m.l-m.r)*(i/pts.length)}" y="${m.t}" width="${bw}" height="${H-m.t-m.b}" fill="transparent" data-i="${i}"/>`;if(i%step===0)g+=`<text class="lbl" x="${m.l+(W-m.l-m.r)*(i/pts.length)+bw/2}" y="${H-6}" text-anchor="middle">${p.x}</text>`;});}
+ else{let d='';pts.forEach((p,i)=>d+=(i?'L':'M')+X(i)+' '+Y(p.y==null?lo:p.y)+' ');g+=`<path d="${d}" fill="none" stroke="var(${color})" stroke-width="2"/>`;pts.forEach((p,i)=>{g+=`<circle cx="${X(i)}" cy="${Y(p.y==null?lo:p.y)}" r="7" fill="transparent" data-i="${i}"/><circle cx="${X(i)}" cy="${Y(p.y==null?lo:p.y)}" r="2.3" fill="var(${color})"/>`;for(let j=0;j<pts.length;j+=step);});for(let i=0;i<pts.length;i+=step)g+=`<text class="lbl" x="${X(i)}" y="${H-6}" text-anchor="middle">${pts[i].x}</text>`;}
+ el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+ el.querySelectorAll('[data-i]').forEach(c=>{const p=pts[+c.dataset.i];c.addEventListener('mousemove',e=>showTT(e,`<b>${p.full||p.x}</b><br>${yl}: ${de(p.y)} ${unit||''}`));c.addEventListener('mouseleave',hideTT);});
+}
+
+function tiles(items){return `<div class="tiles">${items.map(t=>`<div class="tile"><div class="tv"${t.c?` style="color:var(${t.c})"`:''}>${t.v}</div><div class="tl">${t.l}</div></div>`).join('')}</div>`;}
 
 function render(){
  if(!D)return;
- document.getElementById('period').textContent='Stand '+(D.live.ts||D.generated)+'  ·  Daten '+D.span.start+' – '+D.span.end;
- const L=D.live,C=D.counters;
+ const L=D.live,C=D.counters,K=D.kpi||{},lb=D.last_burn;
+ document.getElementById('period').innerHTML=`<span class="dot"></span>Stand ${L.ts||D.generated} · Daten ${D.span.start} – ${D.span.end}`;
  const sens=['Fühler 1 (oben)','Fühler 2','Fühler 3','Fühler 4','Fühler 5 (unten)'];
- const temps=L.puffer||[];const vals=temps.filter(x=>x!=null);const mx=Math.max(...vals,70),mn=20;
- const strat=sens.map((n,i)=>{const t=temps[i];if(t==null)return '';const w=Math.max((t-mn)/(mx-mn)*100,4);
-   return `<div class="layer"><span class="ln">${n}</span><div class="lbar" style="width:${w}%;background:linear-gradient(90deg,var(--blau),var(--holz));opacity:${0.35+0.65*(t-mn)/(mx-mn)}"></div><span class="lt">${de(t)}°</span></div>`;}).join('');
- const kpis=[
-  ['Pelletvorrat',de(L.lager_vorrat),'kg','--pellet'],
-  ['Zündungen gesamt',de(C.zuendungen),'','--blau'],
-  ['Übertemperatur',de(C.uebertemp),'','--rot'],
-  ['STB-Auslösung',de(C.stb),'','--rot'],
-  ['Volllaststunden',de(C.volllaststd),'','--holz'],
- ];
- document.getElementById('app').innerHTML=`
- <section><div class="sec-h">Live-Zustand</div>
-  <div class="grid two">
-   <div class="card"><div class="chart-title">Pufferschichtung · 5 Fühler</div><div class="chart-sub">Ladung ${de(L.puffer_ladung)} %</div><div class="strat">${strat||'<div class=src>keine Fühlerdaten</div>'}</div></div>
-   <div class="card"><div class="chart-title">Solar & Kessel</div><div class="chart-sub">live aus der Anlage</div>
-     <div class="livebig">
-      <div class="b"><div class="bv" style="color:var(--solar)">${de(L.kollektor)}°</div><div class="bl">Kollektor</div></div>
-      <div class="b"><div class="bv">${de(L.solar_heute)}</div><div class="bl">Solar heute kWh</div></div>
-      <div class="b"><div class="bv">${de(L.kessel)}°</div><div class="bl">Kessel</div></div>
-      <div class="b"><div class="bv">${de(L.aussen)}°</div><div class="bl">Außen</div></div>
-     </div>
-     <div class="src">Solar gesamt (Zähler): ${de(L.solar_total)} kWh · HK-Vorlauf ${de(L.hk_vorlauf)}° · FB-Vorlauf ${de(L.fb_vorlauf)}°</div>
-   </div>
+ const tp=L.puffer||[],vv=tp.filter(x=>x!=null),mx=Math.max(...vv,70),mn=20;
+ const strat=sens.map((n,i)=>{const t=tp[i];if(t==null)return'';const w=Math.max((t-mn)/(mx-mn)*100,4);
+   return `<div class="layer"><span class="ln">${n}</span><div class="lbar" style="width:${w}%;background:linear-gradient(90deg,var(--ruecklauf),var(--kessel));opacity:${0.35+0.65*(t-mn)/(mx-mn)}"></div><span class="lt">${de(t)}°</span></div>`;}).join('');
+ const brennt=(L.geblaese||0)>500;
+ let html=`
+ <section><div class="sec-h">Live-Zustand ${brennt?'<span class="badge" style="color:var(--kessel)">Kessel brennt</span>':'<span class="badge">Bereit</span>'}</div>
+  <div class="grid g3">
+   <div class="card"><div class="ct">Pufferschichtung · 5 Fühler</div><div class="cs">Ladung ${de(L.puffer_ladung)} %</div><div class="strat">${strat||'<div class=src>–</div>'}</div></div>
+   <div class="card"><div class="ct">Kessel &amp; Betrieb</div><div class="cs">live</div>
+     ${tiles([{v:de(L.kessel)+'°',l:'Kessel',c:'--kessel'},{v:de(L.abgas)+'°',l:'Abgas',c:'--abgas'},{v:de(L.ruecklauf)+'°',l:'Rücklauf',c:'--ruecklauf'},{v:(L.o2==null?'–':de(L.o2)+(typeof L.o2==='number'?'%':'')),l:'O₂'},{v:de(L.leistung)+' kW',l:'Leistung'},{v:de(L.geblaese),l:'Gebläse U/min'},{v:de(L.mischer_pos)+'%',l:'Mischer'},{v:L.kesselpumpe||'–',l:'Kesselpumpe'}])}</div>
+   <div class="card"><div class="ct">Solar &amp; Heizkreise</div><div class="cs">live</div>
+     ${tiles([{v:de(L.kollektor)+'°',l:'Kollektor',c:'--solar'},{v:de(L.solar_heute)+' kWh',l:'Solar heute'},{v:de(L.aussen)+'°',l:'Außen',c:'--ruecklauf'},{v:de(L.hk_vorlauf)+'°',l:'HK-Vorlauf'},{v:de(L.fb_vorlauf)+'°',l:'FB-Vorlauf'},{v:de(L.lager_vorrat)+' kg',l:'Pelletvorrat',c:'--pellet'}])}
+     <div class="src">Solar gesamt (Zähler): ${de(L.solar_total)} kWh</div></div>
   </div></section>
- <section><div class="sec-h">Kennzahlen</div><div class="grid kpis">${kpis.map(k=>`<div class="card kpi"><div class="accent" style="background:var(${k[3]})"></div><div class="v">${k[1]}<small>${k[2]}</small></div><div class="l">${k[0]}</div></div>`).join('')}</div></section>
+
+ <section><div class="sec-h">Kennzahlen</div><div class="grid kpis">
+   ${[['Holzwärme',de(K.wood_kwh),'kWh','--kessel'],['Abbrände',de(K.burns),'','--blau'],['Ø pro Abbrand',de(K.avg_burn),'kWh','--kessel'],['Pelletvorrat',de(L.lager_vorrat),'kg','--pellet'],['Zündungen',de(C.zuendungen),'','--blau'],['Übertemperatur',de(C.uebertemp),'','--rot'],['STB',de(C.stb),'','--rot'],['Volllaststunden',de(C.volllaststd),'','--kessel']].map(k=>`<div class="card kpi"><div class="accent" style="background:var(${k[3]})"></div><div class="v">${k[1]}<small>${k[2]}</small></div><div class="l">${k[0]}</div></div>`).join('')}
+ </div></section>`;
+
+ if(lb){html+=`
+ <section><div class="sec-h">Letzter Abbrand <span class="badge">Start ${lb.start} · ${de(lb.dauer_h)} h</span></div>
+  <div class="card" style="margin-bottom:14px">${tiles([
+    {v:de(lb.energie_kwh)+' kWh',l:'in Puffer geladen',c:'--kessel'},
+    {v:de(lb.abgas_max)+'°',l:'Abgas max',c:'--abgas'},
+    {v:de(lb.o2_mean)+'%',l:'O₂ Ø',c:'--o2'},
+    {v:de(lb.kessel_max)+'°',l:'Kessel max',c:'--kessel'},
+    {v:de(lb.ruecklauf_min)+'°',l:'Rücklauf min',c:'--ruecklauf'},
+    {v:de(lb.puffer_vor)+'→'+de(lb.puffer_nach)+'°',l:'Puffer Ø'}])}</div>
+  <div class="grid g2">
+   <div class="card"><div class="ct">Temperaturverlauf</div><div class="cs">Kessel, Rücklauf und Abgas über den Abbrand</div><div id="lbTemp"></div><div id="lbTempLeg"></div></div>
+   <div class="card"><div class="ct">Verbrennung &amp; Mischer</div><div class="cs">O₂ und Rücklaufmischer-Position (%)</div><div id="lbO2"></div><div id="lbO2Leg"></div></div>
+  </div></section>`;}
+
+ if(D.burns_recent&&D.burns_recent.length){html+=`
+ <section><div class="sec-h">Abbrand-Historie</div><div class="card" style="overflow-x:auto">
+   <table><thead><tr><th>Start</th><th>Dauer h</th><th>Energie kWh</th><th>Abgas max °</th><th>O₂ Ø %</th><th>Kessel max °</th><th>Puffer Ø</th></tr></thead><tbody>
+   ${D.burns_recent.slice().reverse().map(b=>`<tr><td>${b.start}</td><td>${de(b.dauer_h)}</td><td class="hl">${de(b.energie_kwh)}</td><td>${de(b.abgas_max)}</td><td>${de(b.o2_mean)}</td><td>${de(b.kessel_max)}</td><td>${de(b.puffer_vor)}→${de(b.puffer_nach)}</td></tr>`).join('')}
+   </tbody></table>
+   <div class="src">Steigt „Abgas max" über die Abbrände bei ähnlicher Last, setzt der Wärmetauscher zu – Reinigung prüfen.</div></div></section>`;}
+
+ html+=`
  <section><div class="sec-h">Zeitverlauf</div><div class="card">
    <div class="row2"><div class="seg" id="granSeg"></div><div class="seg" id="metSeg"></div></div>
-   <div class="chart-title" id="tsTitle"></div><div class="chart-sub" id="tsSub"></div><div id="tsChart"></div>
+   <div class="ct" id="tsTitle"></div><div class="cs" id="tsSub"></div><div id="tsChart"></div>
  </div></section>`;
+ document.getElementById('app').innerHTML=html;
+
+ if(lb){const leg1=multiLine(document.getElementById('lbTemp'),lb.series,[{key:'kessel',name:'Kessel',color:'--kessel'},{key:'ruecklauf',name:'Rücklauf',color:'--ruecklauf'},{key:'abgas',name:'Abgas',color:'--abgas'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'});document.getElementById('lbTempLeg').innerHTML=leg1||'';
+   const hasM=lb.series.some(r=>r.mischer!=null);const lines2=[{key:'o2',name:'O₂ %',color:'--o2'}];if(hasM)lines2.push({key:'mischer',name:'Mischer %',color:'--mischer'});
+   const leg2=multiLine(document.getElementById('lbO2'),lb.series,lines2,{fmt:v=>Math.round(v),unit:'%',xkey:'t'});document.getElementById('lbO2Leg').innerHTML=(leg2||'')+(hasM?'':'<div class="src">Mischerposition erscheint ab dem nächsten Abbrand mit Live-Logger.</div>');}
+
  const GRAN=[['tag','Tag'],['woche','Woche'],['monat','Monat']];
- const MET={aktiv_h:{t:'Brennerstunden',u:'h',c:'--holz',bar:true,fmt:v=>Math.round(v)},
-  aussen:{t:'Außentemperatur',u:'°C',c:'--blau',bar:false,fmt:v=>Math.round(v)+'°'},
-  solar:{t:'Solarertrag',u:'kWh',c:'--solar',bar:true,fmt:v=>Math.round(v)}};
+ const MET={aktiv_h:{t:'Brennerstunden',u:'h',c:'--kessel',bar:true,fmt:v=>Math.round(v)},aussen:{t:'Außentemperatur',u:'°C',c:'--ruecklauf',bar:false,fmt:v=>Math.round(v)+'°'},solar:{t:'Solarertrag',u:'kWh',c:'--solar',bar:true,fmt:v=>Math.round(v)}};
  document.getElementById('granSeg').innerHTML=GRAN.map(([k,l])=>`<button data-g="${k}" class="${k==gran?'on':''}">${l}</button>`).join('');
  document.getElementById('metSeg').innerHTML=Object.entries(MET).map(([k,m])=>`<button data-m="${k}" class="${k==metric?'on':''}">${m.t}</button>`).join('');
- function src(){const s=gran=='tag'?D.daily.map(r=>({x:r.d.slice(5),y:metric=='solar'?r.solar_heute:r[metric],full:r.d})):gran=='woche'?D.weekly.map(r=>({x:r.x,y:r[metric],full:r.x})):D.monthly.map(r=>({x:r.x.slice(5),y:r[metric],full:r.x}));return s;}
- function draw(){const m=MET[metric];document.getElementById('tsTitle').textContent=m.t+' · '+GRAN.find(g=>g[0]==gran)[1];
-   document.getElementById('tsSub').textContent=({tag:'je Tag',woche:'je Kalenderwoche',monat:'je Monat'})[gran]+(metric=='solar'?' · füllt sich ab Logger-Start':'');
-   lineChart(document.getElementById('tsChart'),src(),{yl:m.t,color:m.c,fmt:m.fmt,unit:m.u,bar:m.bar});}
+ function srcData(){return gran=='tag'?D.daily.map(r=>({x:r.d.slice(5),y:metric=='solar'?r.solar_heute:r[metric],full:r.d})):gran=='woche'?D.weekly.map(r=>({x:r.x,y:r[metric],full:r.x})):D.monthly.map(r=>({x:r.x.slice(5),y:r[metric],full:r.x}));}
+ function draw(){const m=MET[metric];document.getElementById('tsTitle').textContent=m.t+' · '+GRAN.find(g=>g[0]==gran)[1];document.getElementById('tsSub').textContent=({tag:'je Tag',woche:'je Kalenderwoche',monat:'je Monat'})[gran]+(metric=='solar'?' · füllt sich ab Logger-Start':'');barLine(document.getElementById('tsChart'),srcData(),{yl:m.t,color:m.c,fmt:m.fmt,unit:m.u,bar:m.bar});}
  document.querySelectorAll('#granSeg button').forEach(b=>b.onclick=()=>{gran=b.dataset.g;document.querySelectorAll('#granSeg button').forEach(x=>x.classList.toggle('on',x.dataset.g==gran));draw();});
  document.querySelectorAll('#metSeg button').forEach(b=>b.onclick=()=>{metric=b.dataset.m;document.querySelectorAll('#metSeg button').forEach(x=>x.classList.toggle('on',x.dataset.m==metric));draw();});
  draw();
- document.getElementById('foot').innerHTML='Quelle: ETA SH über lokale REST-API, gesammelt auf der NAS, veröffentlicht via GitHub Pages. JSON erzeugt '+D.generated+'. „Brennerstunden" = Minuten mit Abgasgebläse > 500 U/min. Solarertrag erscheint, sobald der Logger Tage gesammelt hat.';
+ document.getElementById('foot').innerHTML='Quelle: ETA SH über lokale REST-API, gesammelt auf der NAS, veröffentlicht via GitHub Pages. JSON erzeugt '+D.generated+'. „Brennerstunden"/Abbrand-Erkennung über Abgasgebläse &gt; 500 U/min. Puffer-Energie aus den Fühlertemperaturen (±15 %). Seite aktualisiert sich alle 60 s.';
 }
 let started=false;
-function load(){
- fetch(DATA_URL+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{D=j;render();if(!started){started=true;addEventListener('resize',render);}})
- .catch(()=>{if(!D){document.getElementById('period').textContent='';document.getElementById('app').innerHTML='<div class="err">Konnte <b>'+DATA_URL+'</b> nicht laden. Sobald die NAS die JSON ins Repo gepusht hat, erscheinen hier die Daten.</div>';}});
-}
-load();
-setInterval(load,60000);  // alle 60 s neu laden
+function load(){fetch(DATA_URL+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{D=j;render();if(!started){started=true;addEventListener('resize',render);}}).catch(()=>{if(!D){document.getElementById('period').textContent='';document.getElementById('app').innerHTML='<div class="err">Konnte <b>'+DATA_URL+'</b> nicht laden. Sobald die NAS die JSON gepusht hat, erscheinen hier die Daten.</div>';}});}
+load();setInterval(load,60000);
 document.getElementById('themeBtn').onclick=()=>{const t=document.documentElement.getAttribute('data-theme')=='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);event.target.textContent=t=='dark'?'☀︎ Hell':'☾ Dunkel';render();};
 </script></body></html>
