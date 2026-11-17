@@ -110,7 +110,12 @@ function render(){
  draw();
  document.getElementById('foot').innerHTML='Quelle: ETA SH über lokale REST-API, gesammelt auf der NAS, veröffentlicht via GitHub Pages. JSON erzeugt '+D.generated+'. „Brennerstunden" = Minuten mit Abgasgebläse > 500 U/min. Solarertrag erscheint, sobald der Logger Tage gesammelt hat.';
 }
-fetch(DATA_URL,{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{D=j;render();addEventListener('resize',render);})
- .catch(()=>{document.getElementById('period').textContent='';document.getElementById('app').innerHTML='<div class="err">Konnte <b>'+DATA_URL+'</b> nicht laden. Sobald die NAS die JSON ins Repo gepusht hat, erscheinen hier die Daten.</div>';});
+let started=false;
+function load(){
+ fetch(DATA_URL+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{D=j;render();if(!started){started=true;addEventListener('resize',render);}})
+ .catch(()=>{if(!D){document.getElementById('period').textContent='';document.getElementById('app').innerHTML='<div class="err">Konnte <b>'+DATA_URL+'</b> nicht laden. Sobald die NAS die JSON ins Repo gepusht hat, erscheinen hier die Daten.</div>';}});
+}
+load();
+setInterval(load,60000);  // alle 60 s neu laden
 document.getElementById('themeBtn').onclick=()=>{const t=document.documentElement.getAttribute('data-theme')=='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);event.target.textContent=t=='dark'?'☀︎ Hell':'☾ Dunkel';render();};
 </script></body></html>
