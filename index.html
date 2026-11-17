@@ -109,6 +109,7 @@ function scatterChart(el,groups,{line,fmtx,fmty,ux,uy}){
  return `<div class="legend">${leg}</div>`;
 }
 function tiles(items){return `<div class="tiles">${items.map(t=>`<div class="tile"><div class="tv"${t.c?` style="color:var(${t.c})"`:''}>${t.v}</div><div class="tl">${t.l}</div></div>`).join('')}</div>`;}
+function hbars(rows,unit){const mx=Math.max(...rows.map(r=>r.v||0),1);return rows.map(r=>`<div style="display:flex;align-items:center;gap:12px;margin:9px 0"><div style="width:110px;font-size:13px;color:var(--t2);flex-shrink:0">${r.n}</div><div style="flex:1;background:var(--surface2);border-radius:6px;height:26px;overflow:hidden"><div style="height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:12px;font-weight:600;color:#fff;min-width:46px;width:${Math.max((r.v||0)/mx*100,6)}%;background:var(${r.c})">${de(r.v)} ${unit}</div></div></div>`).join('');}
 
 function render(){
  if(!D)return;
@@ -150,10 +151,36 @@ function render(){
 
  if(D.burns_recent&&D.burns_recent.length){html+=`
  <section><div class="sec-h">Abbrand-Historie</div><div class="card" style="overflow-x:auto">
-   <table><thead><tr><th>Start</th><th>Dauer h</th><th>Energie kWh</th><th>Abgas max °</th><th>O₂ Ø %</th><th>Kessel max °</th><th>Puffer Ø</th></tr></thead><tbody>
-   ${D.burns_recent.slice().reverse().map(b=>`<tr><td>${b.start}</td><td>${de(b.dauer_h)}</td><td class="hl">${de(b.energie_kwh)}</td><td>${de(b.abgas_max)}</td><td>${de(b.o2_mean)}</td><td>${de(b.kessel_max)}</td><td>${de(b.puffer_vor)}→${de(b.puffer_nach)}</td></tr>`).join('')}
+   <table><thead><tr><th>Start</th><th>Art</th><th>Dauer h</th><th>Energie kWh</th><th>Abgas max °</th><th>O₂ Ø %</th><th>Kessel max °</th><th>Puffer Ø</th></tr></thead><tbody>
+   ${D.burns_recent.slice().reverse().map(b=>`<tr><td>${b.start}</td><td>${b.art||'–'}</td><td>${de(b.dauer_h)}</td><td class="hl">${de(b.energie_kwh)}</td><td>${de(b.abgas_max)}</td><td>${de(b.o2_mean)}</td><td${b.kessel_max>88?' style="color:var(--rot);font-weight:600"':''}>${de(b.kessel_max)}</td><td>${de(b.puffer_vor)}→${de(b.puffer_nach)}</td></tr>`).join('')}
    </tbody></table>
    <div class="src">Steigt „Abgas max" über die Abbrände bei ähnlicher Last, setzt der Wärmetauscher zu – Reinigung prüfen.</div></div></section>`;}
+
+ const SR=D.sources||{},HP=D.heatpump||{},INC=D.incidents||{},MN=D.maintenance||{};
+ html+=`
+ <section><div class="sec-h">Wärmequellen · saubere Trennung</div>
+  <div class="grid g2">
+   <div class="card"><div class="ct">Wärmeeintrag nach Quelle</div><div class="cs">gelieferte kWh über den Zeitraum</div>
+     ${hbars([{n:'Holz',v:SR.holz_kwh,c:'--kessel'},{n:'Pellets',v:SR.pellet_kwh,c:'--pellet'},{n:'Solar',v:SR.solar_kwh,c:'--solar'}],'kWh')}
+     <div class="src">Holz/Pellet aus den Abbränden (Puffer-Energie), Solar aus dem Tagesertrag. Solar füllt sich ab Logger-Start.</div></div>
+   <div class="card"><div class="ct">Vergleich Wärmepumpe</div><div class="cs">gleiche Wärmemenge, mit deiner Heizkurve (JAZ ${de(HP.jaz)})</div>
+     ${hbars([{n:'Holz + Pellets',v:HP.waerme_kwh,c:'--kessel'},{n:'Wärmepumpe',v:HP.strom_kwh,c:'--solar'}],'kWh')}
+     <div class="src">${de(HP.waerme_kwh)} kWh Wärme bräuchte als WP rund ${de(HP.strom_kwh)} kWh Strom. Jahres-JAZ eher 3,8–4,2.</div></div>
+  </div></section>
+
+ <section><div class="sec-h">Verbrennung &amp; Wartung</div>
+  <div class="grid g2">
+   <div class="card"><div class="ct">Abgastemperatur je Abbrand</div><div class="cs">steigt der Wert bei gleicher Last, setzt der Wärmetauscher zu</div><div id="abgasTrend"></div></div>
+   <div class="card"><div class="ct">Wartung &amp; Restsauerstoff</div><div class="cs">Betriebszähler und Verbrennungsgüte</div>
+     ${tiles([{v:de(MN.volllaststd),l:'Volllaststunden',c:'--kessel'},{v:de(MN.pel_verbr_wartung)+' kg',l:'Pellets seit Wartung',c:'--pellet'},{v:de(L.o2==null?'–':L.o2),l:'O₂ aktuell'},{v:de(L.abgas)+'°',l:'Abgas aktuell',c:'--abgas'}])}
+     <div id="o2Trend" style="margin-top:12px"></div></div>
+  </div></section>
+
+ <section><div class="sec-h">Vorfälle</div>
+  <div class="card">
+   <div class="tiles" style="margin-bottom:12px">${[['Übertemperatur',de(INC.uebertemp),'--rot'],['STB-Auslösung',de(INC.stb),'--rot']].map(k=>`<div class="tile"><div class="tv" style="color:var(${k[2]})">${k[1]}</div><div class="tl">${k[0]}</div></div>`).join('')}</div>
+   ${(INC.events&&INC.events.length)?`<table><thead><tr><th>Start</th><th>Kessel max °</th><th>Hinweis</th></tr></thead><tbody>${INC.events.slice().reverse().map(e=>`<tr><td>${e.start}</td><td style="color:var(--rot);font-weight:600">${de(e.kessel_max)}</td><td>${e.note}</td></tr>`).join('')}</tbody></table>`:'<div class="src">Keine kritischen Abbrände erkannt.</div>'}
+   <div class="src">Erkannt werden Abbrände mit Kessel &gt; 88 °C. Der Fall vom 15.11. (94,1 °C nach Stromausfall) ist hier gelistet. STB = harte Sicherheitsabschaltung, 0 = nie ausgelöst.</div></div></section>`;
 
  const pb=D.pellet_burn;
  if(pb){html+=`
@@ -210,6 +237,11 @@ function render(){
 
  const wRows=D.daily.filter(r=>r.tmin!=null).map(r=>({t:r.d.slice(5),tmin:r.tmin,tmax:r.tmax}));
  if(wRows.length){document.getElementById('wetterLeg').innerHTML=multiLine(document.getElementById('wetter'),wRows,[{key:'tmax',name:'Max',color:'--kessel'},{key:'tmin',name:'Min',color:'--ruecklauf'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'})||'';}
+
+ const at=document.getElementById('abgasTrend');
+ if(at&&D.burns_recent&&D.burns_recent.length){const br=D.burns_recent;
+   barLine(at,br.map(b=>({x:b.start,y:b.abgas_max})),{yl:'Abgas max',color:'--abgas',fmt:v=>Math.round(v)+'°',unit:'°'});
+   barLine(document.getElementById('o2Trend'),br.map(b=>({x:b.start,y:b.o2_mean})),{yl:'O₂ Ø',color:'--o2',fmt:v=>Math.round(v)+'%',unit:'%'});}
 
  const GRAN=[['tag','Tag'],['woche','Woche'],['monat','Monat']];
  const MET={aktiv_h:{t:'Brennerstunden',u:'h',c:'--kessel',bar:true,fmt:v=>Math.round(v)},aussen:{t:'Außentemperatur',u:'°C',c:'--ruecklauf',bar:false,fmt:v=>Math.round(v)+'°'},solar:{t:'Solarertrag',u:'kWh',c:'--solar',bar:true,fmt:v=>Math.round(v)}};
