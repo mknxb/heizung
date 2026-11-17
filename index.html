@@ -40,6 +40,15 @@ td.hl{color:var(--kessel);font-weight:600}
 .tt{position:fixed;pointer-events:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--t1);box-shadow:0 6px 24px rgba(0,0,0,.35);opacity:0;transition:opacity .08s;z-index:10;white-space:nowrap}
 .src{color:var(--t3);font-size:11px;margin-top:10px}.foot{color:var(--t3);font-size:12px;margin-top:38px;border-top:1px solid var(--border);padding-top:16px}
 .err{background:var(--surface);border:1px solid var(--rot);border-radius:var(--r);padding:16px;color:var(--t2)}
+@keyframes flow{to{stroke-dashoffset:-32}}
+.flow{stroke-dasharray:7 7;animation:flow 1.1s linear infinite}
+@keyframes flick{0%,100%{transform:scaleY(.92);opacity:.85}50%{transform:scaleY(1.12);opacity:1}}
+.flame{transform-box:fill-box;transform-origin:center bottom;animation:flick .9s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rays{transform-box:fill-box;transform-origin:center;animation:spin 22s linear infinite}
+@keyframes pump{to{transform:rotate(360deg)}}
+.pumpon{transform-box:fill-box;transform-origin:center;animation:pump 2.2s linear infinite}
+.schema text{font-size:12px;fill:var(--t2)}.schema .big{font-size:15px;font-weight:650;fill:var(--t1)}.schema .comp:hover{filter:brightness(1.15);cursor:default}
 .badge{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--t2);margin-left:8px}
 </style></head>
 <body><div class="wrap">
@@ -110,6 +119,30 @@ function scatterChart(el,groups,{line,fmtx,fmty,ux,uy}){
  return `<div class="legend">${leg}</div>`;
 }
 function tiles(items){return `<div class="tiles">${items.map(t=>`<div class="tile"><div class="tv"${t.c?` style="color:var(${t.c})"`:''}>${t.v}</div><div class="tl">${t.l}</div></div>`).join('')}</div>`;}
+function tcol(t){if(t==null)return '#555';const c0=[57,135,229],c1=[235,104,52];const x=Math.max(0,Math.min(1,(t-22)/(75-22)));return `rgb(${c0.map((a,i)=>Math.round(a+(c1[i]-a)*x)).join(',')})`;}
+function schema(L){
+ const brennt=(L.geblaese||0)>500,pelB=(L.pel_geblaese||0)>500;
+ const P=L.puffer||[];
+ const solarOn=(L.solar_pumpe&&/ein|an|^1/i.test(''+L.solar_pumpe))||(L.kollektor!=null&&P[4]!=null&&L.kollektor>P[4]+4);
+ const hkOn=(L.hk_vorlauf||0)>25,fbOn=(L.fb_vorlauf||0)>25;
+ const pump=(L.kesselpumpe&&/ein|an|^1/i.test(''+L.kesselpumpe))||brennt;
+ const bx=360,by=70,bw=110,bh=300,sb=bh/5;let bands='';
+ for(let i=0;i<5;i++)bands+=`<rect x="${bx}" y="${by+i*sb}" width="${bw}" height="${sb-1.5}" rx="3" fill="${tcol(P[i])}" opacity="0.92"/><text x="${bx+bw-8}" y="${by+i*sb+sb/2+4}" text-anchor="end" style="fill:#fff;font-size:11px">${P[i]==null?'':Math.round(P[i])+'°'}</text>`;
+ const flow=(d,color,on,rev)=>`<path d="${d}" fill="none" stroke="${color}" stroke-width="7" opacity="0.22"/>${on?`<path d="${d}" fill="none" stroke="${color}" stroke-width="3.5" class="flow"${rev?' style="animation-direction:reverse"':''}/>`:''}`;
+ const flame=brennt?`<g class="flame"><path d="M120 338 q-15 -28 0 -50 q11 18 17 6 q11 22 -2 44 q-7 9 -15 0 Z" fill="var(--kessel)"/><path d="M120 336 q-8 -16 0 -30 q6 11 11 2 q6 13 -2 28 q-4 4 -9 0 Z" fill="var(--pellet)"/></g>`:'';
+ return `<svg viewBox="0 0 760 400" class="schema">
+  ${flow('M150 300 L150 345 L360 345','#eb6834',pump)}
+  ${flow('M120 114 L120 140 L360 140','#1baf7a',solarOn)}
+  ${flow('M470 150 L560 150','#eb6834',hkOn)}
+  ${flow('M470 300 L560 300','#3987e5',fbOn)}
+  <g class="comp" data-tt="Kollektor ${de(L.kollektor)}°C${solarOn?' · Pumpe läuft':''}"><g transform="translate(100,30)"><g class="rays" opacity="${solarOn?1:0.35}">${[0,1,2,3,4,5,6,7].map(i=>`<line x1="0" y1="-16" x2="0" y2="-24" stroke="var(--solar)" stroke-width="2" transform="rotate(${i*45})"/>`).join('')}</g><circle r="11" fill="var(--solar)" opacity="${solarOn?1:0.45}"/></g><rect x="40" y="76" width="120" height="38" rx="5" fill="var(--surface2)" stroke="var(--border)"/><text x="100" y="100" text-anchor="middle">Solar ${de(L.kollektor)}°</text></g>
+  <g class="comp" data-tt="Kessel ${de(L.kessel)}°C · Abgas ${de(L.abgas)}°C · ${brennt?'brennt':'bereit'}"><rect x="60" y="235" width="120" height="112" rx="8" fill="var(--surface2)" stroke="${brennt?'var(--kessel)':'var(--border)'}" stroke-width="${brennt?2:1}"/>${flame}<text x="120" y="228" text-anchor="middle" class="big">${de(L.kessel)}°</text><text x="120" y="365" text-anchor="middle">Kessel${pelB?' · Pellet':''}</text></g>
+  <g class="comp" data-tt="Puffer ${de(L.puffer_ladung)}% · oben ${de(P[0])}° unten ${de(P[4])}°"><rect x="${bx-6}" y="${by-6}" width="${bw+12}" height="${bh+12}" rx="10" fill="none" stroke="var(--border)"/>${bands}<text x="${bx+bw/2}" y="${by-14}" text-anchor="middle">Puffer ${de(L.puffer_ladung)}%</text></g>
+  <g class="comp" data-tt="Heizkörper-Vorlauf ${de(L.hk_vorlauf)}°C"><rect x="560" y="120" width="110" height="60" rx="6" fill="var(--surface2)" stroke="var(--border)"/>${[0,1,2,3].map(i=>`<line x1="${578+i*22}" y1="128" x2="${578+i*22}" y2="172" stroke="var(--kessel)" stroke-width="3" opacity="${hkOn?0.9:0.3}"/>`).join('')}<text x="615" y="198" text-anchor="middle">HK ${de(L.hk_vorlauf)}°</text></g>
+  <g class="comp" data-tt="Fußboden-Vorlauf ${de(L.fb_vorlauf)}°C"><rect x="560" y="270" width="110" height="60" rx="6" fill="var(--surface2)" stroke="var(--border)"/><path d="M570 300 q14 -14 28 0 q14 14 28 0 q14 -14 28 0" fill="none" stroke="var(--ruecklauf)" stroke-width="3" opacity="${fbOn?0.9:0.3}"/><text x="615" y="348" text-anchor="middle">FB ${de(L.fb_vorlauf)}°</text></g>
+  <text x="710" y="32" text-anchor="end" class="big">${de(L.aussen)}°</text><text x="710" y="48" text-anchor="end">außen</text>
+ </svg>`;
+}
 function hbars(rows,unit){const mx=Math.max(...rows.map(r=>r.v||0),1);return rows.map(r=>`<div style="display:flex;align-items:center;gap:12px;margin:9px 0"><div style="width:110px;font-size:13px;color:var(--t2);flex-shrink:0">${r.n}</div><div style="flex:1;background:var(--surface2);border-radius:6px;height:26px;overflow:hidden"><div style="height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:12px;font-weight:600;color:#fff;min-width:46px;width:${Math.max((r.v||0)/mx*100,6)}%;background:var(${r.c})">${de(r.v)} ${unit}</div></div></div>`).join('');}
 
 function render(){
@@ -129,6 +162,7 @@ function render(){
  let html='';
  if(HW.length){html+=`<section><div class="sec-h">Hinweise</div><div class="grid" style="gap:10px">${HW.map(h=>{const lv=LVL[h.level]||LVL.info;return `<div class="card" style="border-left:3px solid var(${lv[0]});padding:12px 16px;display:flex;gap:11px;align-items:center"><span style="color:var(${lv[0]});font-weight:700;font-size:16px">${lv[1]}</span><span style="font-size:13.5px;color:var(--t2)">${h.text}</span></div>`;}).join('')}</div></section>`;}
  html+=`
+ <section><div class="sec-h">Anlage · live</div><div class="card" style="padding:10px">${schema(L)}</div></section>
  <section><div class="sec-h">Live-Zustand ${brennt?'<span class="badge" style="color:var(--kessel)">Kessel brennt</span>':'<span class="badge">Bereit</span>'}</div>
   <div class="grid g3">
    <div class="card"><div class="ct">Pufferschichtung · 5 Fühler</div><div class="cs">Ladung ${de(L.puffer_ladung)} %</div><div class="strat">${strat||'<div class=src>–</div>'}</div></div>
@@ -231,6 +265,7 @@ function render(){
    <div class="ct" id="tsTitle"></div><div class="cs" id="tsSub"></div><div id="tsChart"></div>
  </div></section>`;
  document.getElementById('app').innerHTML=html;
+ document.querySelectorAll('[data-tt]').forEach(c=>{c.addEventListener('mousemove',e=>showTT(e,c.getAttribute('data-tt')));c.addEventListener('mouseleave',hideTT);});
 
  if(cb){const leg1=multiLine(document.getElementById('lbTemp'),cb.series,[{key:'kessel',name:'Kessel',color:'--kessel'},{key:'ruecklauf',name:'Rücklauf',color:'--ruecklauf'},{key:'abgas',name:'Abgas',color:'--abgas'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'});document.getElementById('lbTempLeg').innerHTML=leg1||'';
    const hasM=cb.series.some(r=>r.mischer!=null);const lines2=[{key:'o2',name:'O₂ %',color:'--o2'}];if(hasM)lines2.push({key:'mischer',name:'Mischer %',color:'--mischer'});
