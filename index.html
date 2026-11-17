@@ -91,6 +91,23 @@ function barLine(el,pts,{yl,color,fmt,unit,bar}){
  el.querySelectorAll('[data-i]').forEach(c=>{const p=pts[+c.dataset.i];c.addEventListener('mousemove',e=>showTT(e,`<b>${p.full||p.x}</b><br>${yl}: ${de(p.y)} ${unit||''}`));c.addEventListener('mouseleave',hideTT);});
 }
 
+function scatterChart(el,groups,{line,fmtx,fmty,ux,uy}){
+ const W=el.clientWidth||520,H=230,m={t:10,r:14,b:30,l:40};
+ let allx=[],ally=[];groups.forEach(G=>G.pts.forEach(p=>{allx.push(p.x);ally.push(p.y);}));
+ if(line){allx.push(line.x1,line.x2);ally.push(line.y1,line.y2);}
+ if(!allx.length){el.innerHTML='<div class="src">noch keine Betriebspunkte – füllt sich im Betrieb</div>';return '';}
+ const xlo=Math.min(...allx),xhi=Math.max(...allx),ylo=Math.min(...ally,0),yhi=Math.max(...ally);
+ const XL=xlo-1,XH=xhi+1,YL=ylo,YH=yhi+(yhi-ylo)*0.1||1;
+ const X=v=>m.l+(W-m.l-m.r)*((v-XL)/(XH-XL||1)),Y=v=>m.t+(H-m.t-m.b)*(1-(v-YL)/(YH-YL||1));
+ let g='';for(let i=0;i<=4;i++){const v=YL+(YH-YL)*i/4,y=Y(v);g+=`<line class="gridline" x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}"/><text class="lbl" x="${m.l-6}" y="${y+3}" text-anchor="end">${fmty?fmty(v):Math.round(v)}</text>`;}
+ for(let i=0;i<=5;i++){const v=XL+(XH-XL)*i/5;g+=`<text class="lbl" x="${X(v)}" y="${H-8}" text-anchor="middle">${fmtx?fmtx(v):Math.round(v)}</text>`;}
+ if(line)g+=`<line x1="${X(line.x1)}" y1="${Y(line.y1)}" x2="${X(line.x2)}" y2="${Y(line.y2)}" stroke="var(--t3)" stroke-width="2" stroke-dasharray="5 4"/>`;
+ groups.forEach(G=>G.pts.forEach(p=>{g+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3" fill="var(${G.color})" fill-opacity="0.65" data-x="${p.x}" data-y="${p.y}" data-n="${G.name}"/>`;}));
+ el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+ el.querySelectorAll('circle[data-x]').forEach(c=>{c.addEventListener('mousemove',e=>showTT(e,`<b>${c.dataset.n}</b><br>Außen ${c.dataset.x}${ux||''} · Vorlauf ${c.dataset.y}${uy||''}`));c.addEventListener('mouseleave',hideTT);});
+ const leg=groups.map(G=>`<span><span class="sw" style="background:var(${G.color})"></span>${G.name}</span>`).join('')+(line?`<span><span class="sw" style="background:var(--t3)"></span>${line.name}</span>`:'');
+ return `<div class="legend">${leg}</div>`;
+}
 function tiles(items){return `<div class="tiles">${items.map(t=>`<div class="tile"><div class="tv"${t.c?` style="color:var(${t.c})"`:''}>${t.v}</div><div class="tl">${t.l}</div></div>`).join('')}</div>`;}
 
 function render(){
@@ -138,6 +155,35 @@ function render(){
    </tbody></table>
    <div class="src">Steigt „Abgas max" über die Abbrände bei ähnlicher Last, setzt der Wärmetauscher zu – Reinigung prüfen.</div></div></section>`;}
 
+ const pb=D.pellet_burn;
+ if(pb){html+=`
+ <section><div class="sec-h">Letzter Pellet-Abbrand <span class="badge">Start ${pb.start} · ${de(pb.dauer_h)} h</span></div>
+  <div class="card" style="margin-bottom:14px">${tiles([{v:de(pb.abgas_max)+'°',l:'Abgas max',c:'--abgas'},{v:de(pb.o2_mean)+'%',l:'O₂ Ø',c:'--o2'},{v:de(pb.puffer_vor)+'→'+de(pb.puffer_nach)+'°',l:'Puffer Ø'}])}</div>
+  <div class="grid g2">
+   <div class="card"><div class="ct">Temperaturverlauf</div><div class="cs">Pelletkessel, Rücklauf, Abgas</div><div id="pbTemp"></div><div id="pbTempLeg"></div></div>
+   <div class="card"><div class="ct">Einschub &amp; Luftschieber</div><div class="cs">Pellet-Förderung und Luft (%)</div><div id="pbStk"></div><div id="pbStkLeg"></div></div>
+  </div></section>`;}
+
+ const cv=D.curve||{};
+ html+=`
+ <section><div class="sec-h">Heizkurve &amp; Betriebspunkte</div>
+  <div class="grid g2">
+   <div class="card"><div class="ct">Heizkörper (HK)</div><div class="cs">Vorlauf gegen Außentemperatur · gestrichelt = eingestellte Kurve</div><div id="curveHK"></div><div id="curveHKLeg"></div></div>
+   <div class="card"><div class="ct">Fußboden (FB)</div><div class="cs">Vorlauf gegen Außentemperatur</div><div id="curveFB"></div><div id="curveFBLeg"></div></div>
+  </div></section>
+
+ <section><div class="sec-h">Heizkreise · Vorlauf je Tag</div>
+  <div class="card"><div class="ct">Vorlauftemperatur HK &amp; FB</div><div class="cs">Tagesmittel</div><div id="hkFlow"></div><div id="hkFlowLeg"></div></div></section>
+
+ <section><div class="sec-h">Solar</div>
+  <div class="grid g2">
+   <div class="card"><div class="ct">Solarertrag je Tag</div><div class="cs">kWh · füllt sich ab Logger-Start</div><div id="solarDaily"></div></div>
+   <div class="card"><div class="ct">Solar live</div><div class="cs">aktueller Zustand</div>${tiles([{v:de(L.kollektor)+'°',l:'Kollektor',c:'--solar'},{v:de(L.solar_heute)+' kWh',l:'heute'},{v:de(L.solar_gestern)+' kWh',l:'gestern'},{v:de((D.energy||{}).solar_total)+' kWh',l:'gesamt (Zähler)'}])}</div>
+  </div></section>
+
+ <section><div class="sec-h">Wetter</div>
+  <div class="card"><div class="ct">Außentemperatur · Tagesspanne</div><div class="cs">Min und Max je Tag</div><div id="wetter"></div><div id="wetterLeg"></div></div></section>`;
+
  html+=`
  <section><div class="sec-h">Zeitverlauf</div><div class="card">
    <div class="row2"><div class="seg" id="granSeg"></div><div class="seg" id="metSeg"></div></div>
@@ -148,6 +194,22 @@ function render(){
  if(lb){const leg1=multiLine(document.getElementById('lbTemp'),lb.series,[{key:'kessel',name:'Kessel',color:'--kessel'},{key:'ruecklauf',name:'Rücklauf',color:'--ruecklauf'},{key:'abgas',name:'Abgas',color:'--abgas'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'});document.getElementById('lbTempLeg').innerHTML=leg1||'';
    const hasM=lb.series.some(r=>r.mischer!=null);const lines2=[{key:'o2',name:'O₂ %',color:'--o2'}];if(hasM)lines2.push({key:'mischer',name:'Mischer %',color:'--mischer'});
    const leg2=multiLine(document.getElementById('lbO2'),lb.series,lines2,{fmt:v=>Math.round(v),unit:'%',xkey:'t'});document.getElementById('lbO2Leg').innerHTML=(leg2||'')+(hasM?'':'<div class="src">Mischerposition erscheint ab dem nächsten Abbrand mit Live-Logger.</div>');}
+
+ if(pb){const l1=multiLine(document.getElementById('pbTemp'),pb.series,[{key:'kessel',name:'Pelletkessel',color:'--kessel'},{key:'ruecklauf',name:'Rücklauf',color:'--ruecklauf'},{key:'abgas',name:'Abgas',color:'--abgas'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'});document.getElementById('pbTempLeg').innerHTML=l1||'';
+   const l2=multiLine(document.getElementById('pbStk'),pb.series,[{key:'einschub',name:'Einschub',color:'--pellet'},{key:'luftschieber',name:'Luftschieber',color:'--o2'}],{fmt:v=>Math.round(v),unit:'%',xkey:'t'});document.getElementById('pbStkLeg').innerHTML=l2||'';}
+
+ if(cv.hk){const s=cv.hk_set||{tm10:41,tp10:30};const line={x1:-10,y1:s.tm10,x2:10,y2:s.tp10,name:'eingestellte Kurve'};
+   document.getElementById('curveHKLeg').innerHTML=scatterChart(document.getElementById('curveHK'),[{name:'HK Betrieb',color:'--kessel',pts:cv.hk}],{line,fmtx:v=>Math.round(v)+'°',fmty:v=>Math.round(v)+'°',ux:'°',uy:'°'})||'';
+   document.getElementById('curveFBLeg').innerHTML=scatterChart(document.getElementById('curveFB'),[{name:'FB Betrieb',color:'--ruecklauf',pts:cv.fb||[]}],{fmtx:v=>Math.round(v)+'°',fmty:v=>Math.round(v)+'°',ux:'°',uy:'°'})||'';}
+
+ const hkRows=D.daily.filter(r=>r.hk!=null||r.fb!=null).map(r=>({t:r.d.slice(5),hk:r.hk,fb:r.fb}));
+ if(hkRows.length){document.getElementById('hkFlowLeg').innerHTML=multiLine(document.getElementById('hkFlow'),hkRows,[{key:'hk',name:'HK-Vorlauf',color:'--kessel'},{key:'fb',name:'FB-Vorlauf',color:'--ruecklauf'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'})||'';}
+ else{document.getElementById('hkFlow').innerHTML='<div class="src">Heizkreis-Verlauf füllt sich ab Logger-Start.</div>';}
+
+ barLine(document.getElementById('solarDaily'),D.daily.map(r=>({x:r.d.slice(5),y:r.solar_heute,full:r.d})),{yl:'Solarertrag',color:'--solar',fmt:v=>Math.round(v),unit:'kWh',bar:true});
+
+ const wRows=D.daily.filter(r=>r.tmin!=null).map(r=>({t:r.d.slice(5),tmin:r.tmin,tmax:r.tmax}));
+ if(wRows.length){document.getElementById('wetterLeg').innerHTML=multiLine(document.getElementById('wetter'),wRows,[{key:'tmax',name:'Max',color:'--kessel'},{key:'tmin',name:'Min',color:'--ruecklauf'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'})||'';}
 
  const GRAN=[['tag','Tag'],['woche','Woche'],['monat','Monat']];
  const MET={aktiv_h:{t:'Brennerstunden',u:'h',c:'--kessel',bar:true,fmt:v=>Math.round(v)},aussen:{t:'Außentemperatur',u:'°C',c:'--ruecklauf',bar:false,fmt:v=>Math.round(v)+'°'},solar:{t:'Solarertrag',u:'kWh',c:'--solar',bar:true,fmt:v=>Math.round(v)}};
