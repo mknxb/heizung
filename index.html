@@ -54,7 +54,8 @@ const tt=document.getElementById('tt');
 const de=n=>(n==null||n===''?'–':(typeof n==='number'?(Math.abs(n)>=100?Math.round(n).toLocaleString('de-DE'):n.toLocaleString('de-DE',{maximumFractionDigits:1})):n));
 function showTT(e,h){tt.innerHTML=h;tt.style.opacity=1;let x=e.clientX+14,y=e.clientY+14;if(x+tt.offsetWidth>innerWidth)x=e.clientX-tt.offsetWidth-14;if(y+tt.offsetHeight>innerHeight)y=e.clientY-tt.offsetHeight-14;tt.style.left=x+'px';tt.style.top=y+'px';}
 function hideTT(){tt.style.opacity=0;}
-let D=null,gran='tag',metric='aktiv_h';
+let D=null,gran='tag',metric='aktiv_h',burnIdx=null;
+const LVL={alarm:['--rot','⚠'],warn:['--pellet','!'],info:['--blau','i']};
 
 function axis(el,H,m,lo,hi,fmt){let g='';for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=m.t+(H-m.t-m.b)*(1-(v-lo)/(hi-lo||1));g+=`<line class="gridline" x1="${m.l}" x2="W" y1="${y}" y2="${y}"/><text class="lbl" x="${m.l-6}" y="${y+3}" text-anchor="end">${fmt?fmt(v):Math.round(v)}</text>`;}return g;}
 
@@ -113,14 +114,21 @@ function hbars(rows,unit){const mx=Math.max(...rows.map(r=>r.v||0),1);return row
 
 function render(){
  if(!D)return;
- const L=D.live,C=D.counters,K=D.kpi||{},lb=D.last_burn;
+ const L=D.live,C=D.counters,K=D.kpi||{};
+ const BD=D.burns_detail||(D.last_burn?[D.last_burn]:[]);
+ if(burnIdx==null||burnIdx>=BD.length)burnIdx=BD.length-1;
+ const cb=BD[burnIdx]||null;
+ const spanTxt=(D.span.start||'').slice(0,7)+' – '+(D.span.end||'').slice(0,7);
  document.getElementById('period').innerHTML=`<span class="dot"></span>Stand ${L.ts||D.generated} · Daten ${D.span.start} – ${D.span.end}`;
+ const HW=D.hinweise||[];
  const sens=['Fühler 1 (oben)','Fühler 2','Fühler 3','Fühler 4','Fühler 5 (unten)'];
  const tp=L.puffer||[],vv=tp.filter(x=>x!=null),mx=Math.max(...vv,70),mn=20;
  const strat=sens.map((n,i)=>{const t=tp[i];if(t==null)return'';const w=Math.max((t-mn)/(mx-mn)*100,4);
    return `<div class="layer"><span class="ln">${n}</span><div class="lbar" style="width:${w}%;background:linear-gradient(90deg,var(--ruecklauf),var(--kessel));opacity:${0.35+0.65*(t-mn)/(mx-mn)}"></div><span class="lt">${de(t)}°</span></div>`;}).join('');
  const brennt=(L.geblaese||0)>500;
- let html=`
+ let html='';
+ if(HW.length){html+=`<section><div class="sec-h">Hinweise</div><div class="grid" style="gap:10px">${HW.map(h=>{const lv=LVL[h.level]||LVL.info;return `<div class="card" style="border-left:3px solid var(${lv[0]});padding:12px 16px;display:flex;gap:11px;align-items:center"><span style="color:var(${lv[0]});font-weight:700;font-size:16px">${lv[1]}</span><span style="font-size:13.5px;color:var(--t2)">${h.text}</span></div>`;}).join('')}</div></section>`;}
+ html+=`
  <section><div class="sec-h">Live-Zustand ${brennt?'<span class="badge" style="color:var(--kessel)">Kessel brennt</span>':'<span class="badge">Bereit</span>'}</div>
   <div class="grid g3">
    <div class="card"><div class="ct">Pufferschichtung · 5 Fühler</div><div class="cs">Ladung ${de(L.puffer_ladung)} %</div><div class="strat">${strat||'<div class=src>–</div>'}</div></div>
@@ -131,28 +139,34 @@ function render(){
      <div class="src">Solar gesamt (Zähler): ${de(L.solar_total)} kWh</div></div>
   </div></section>
 
- <section><div class="sec-h">Kennzahlen</div><div class="grid kpis">
+ <section><div class="sec-h">Kennzahlen <span class="badge">gesamter Zeitraum ${spanTxt}</span></div><div class="grid kpis">
    ${[['Holzwärme',de(K.wood_kwh),'kWh','--kessel'],['Abbrände',de(K.burns),'','--blau'],['Ø pro Abbrand',de(K.avg_burn),'kWh','--kessel'],['Pelletvorrat',de(L.lager_vorrat),'kg','--pellet'],['Zündungen',de(C.zuendungen),'','--blau'],['Übertemperatur',de(C.uebertemp),'','--rot'],['STB',de(C.stb),'','--rot'],['Volllaststunden',de(C.volllaststd),'','--kessel']].map(k=>`<div class="card kpi"><div class="accent" style="background:var(${k[3]})"></div><div class="v">${k[1]}<small>${k[2]}</small></div><div class="l">${k[0]}</div></div>`).join('')}
  </div></section>`;
 
- if(lb){html+=`
- <section><div class="sec-h">Letzter Abbrand <span class="badge">Start ${lb.start} · ${de(lb.dauer_h)} h</span></div>
-  <div class="card" style="margin-bottom:14px">${tiles([
-    {v:de(lb.energie_kwh)+' kWh',l:'in Puffer geladen',c:'--kessel'},
-    {v:de(lb.abgas_max)+'°',l:'Abgas max',c:'--abgas'},
-    {v:de(lb.o2_mean)+'%',l:'O₂ Ø',c:'--o2'},
-    {v:de(lb.kessel_max)+'°',l:'Kessel max',c:'--kessel'},
-    {v:de(lb.ruecklauf_min)+'°',l:'Rücklauf min',c:'--ruecklauf'},
-    {v:de(lb.puffer_vor)+'→'+de(lb.puffer_nach)+'°',l:'Puffer Ø'}])}</div>
+ if(cb){const opts=BD.map((b,i)=>`<option value="${i}"${i==burnIdx?' selected':''}>${(b.date||'').slice(5)} ${b.start} · ${b.art||''}</option>`).reverse().join('');
+  html+=`
+ <section><div class="sec-h">Abbrand-Detail <span class="badge">${(cb.date||'').split('-').reverse().join('.')} · ${cb.start} · ${cb.art||''}</span></div>
+  <div class="card" style="margin-bottom:14px">
+   <div class="row2" style="margin-bottom:14px;justify-content:space-between">
+     <div style="display:flex;gap:8px;align-items:center"><button class="toggle" id="burnPrev">‹ früher</button><button class="toggle" id="burnNext">später ›</button></div>
+     <select id="burnSel" class="toggle" style="cursor:pointer">${opts}</select>
+   </div>
+   ${tiles([
+    {v:de(cb.energie_kwh)+' kWh',l:'erzeugte Wärme',c:'--kessel'},
+    {v:(cb.ladung_vor!=null?de(cb.ladung_vor)+'→'+de(cb.ladung_nach)+'%':'–'),l:'Puffer-Ladung'},
+    {v:de(cb.dauer_h)+' h',l:'Dauer'},
+    {v:de(cb.abgas_max)+'°',l:'Abgas max',c:'--abgas'},
+    {v:de(cb.o2_mean)+'%',l:'O₂ Ø',c:'--o2'},
+    {v:de(cb.kessel_max)+'°',l:'Kessel max',c:cb.kessel_max>88?'--rot':'--kessel'}])}</div>
   <div class="grid g2">
-   <div class="card"><div class="ct">Temperaturverlauf</div><div class="cs">Kessel, Rücklauf und Abgas über den Abbrand</div><div id="lbTemp"></div><div id="lbTempLeg"></div></div>
+   <div class="card"><div class="ct">Temperaturverlauf</div><div class="cs">Kessel, Rücklauf und Abgas</div><div id="lbTemp"></div><div id="lbTempLeg"></div></div>
    <div class="card"><div class="ct">Verbrennung &amp; Mischer</div><div class="cs">O₂ und Rücklaufmischer-Position (%)</div><div id="lbO2"></div><div id="lbO2Leg"></div></div>
   </div></section>`;}
 
  if(D.burns_recent&&D.burns_recent.length){html+=`
  <section><div class="sec-h">Abbrand-Historie</div><div class="card" style="overflow-x:auto">
-   <table><thead><tr><th>Start</th><th>Art</th><th>Dauer h</th><th>Energie kWh</th><th>Abgas max °</th><th>O₂ Ø %</th><th>Kessel max °</th><th>Puffer Ø</th></tr></thead><tbody>
-   ${D.burns_recent.slice().reverse().map(b=>`<tr><td>${b.start}</td><td>${b.art||'–'}</td><td>${de(b.dauer_h)}</td><td class="hl">${de(b.energie_kwh)}</td><td>${de(b.abgas_max)}</td><td>${de(b.o2_mean)}</td><td${b.kessel_max>88?' style="color:var(--rot);font-weight:600"':''}>${de(b.kessel_max)}</td><td>${de(b.puffer_vor)}→${de(b.puffer_nach)}</td></tr>`).join('')}
+   <table><thead><tr><th>Datum</th><th>Start</th><th>Art</th><th>Dauer h</th><th>Energie kWh</th><th>Ladung %</th><th>Abgas max °</th><th>O₂ Ø %</th><th>Kessel max °</th></tr></thead><tbody>
+   ${D.burns_recent.slice().reverse().map(b=>`<tr><td>${b.date?b.date.split('-').reverse().join('.').slice(0,6):'–'}</td><td>${b.start}</td><td>${b.art||'–'}</td><td>${de(b.dauer_h)}</td><td class="hl">${de(b.energie_kwh)}</td><td>${b.ladung_vor!=null?de(b.ladung_vor)+'→'+de(b.ladung_nach):'–'}</td><td>${de(b.abgas_max)}</td><td>${de(b.o2_mean)}</td><td${b.kessel_max>88?' style="color:var(--rot);font-weight:600"':''}>${de(b.kessel_max)}</td></tr>`).join('')}
    </tbody></table>
    <div class="src">Steigt „Abgas max" über die Abbrände bei ähnlicher Last, setzt der Wärmetauscher zu – Reinigung prüfen.</div></div></section>`;}
 
@@ -218,9 +232,12 @@ function render(){
  </div></section>`;
  document.getElementById('app').innerHTML=html;
 
- if(lb){const leg1=multiLine(document.getElementById('lbTemp'),lb.series,[{key:'kessel',name:'Kessel',color:'--kessel'},{key:'ruecklauf',name:'Rücklauf',color:'--ruecklauf'},{key:'abgas',name:'Abgas',color:'--abgas'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'});document.getElementById('lbTempLeg').innerHTML=leg1||'';
-   const hasM=lb.series.some(r=>r.mischer!=null);const lines2=[{key:'o2',name:'O₂ %',color:'--o2'}];if(hasM)lines2.push({key:'mischer',name:'Mischer %',color:'--mischer'});
-   const leg2=multiLine(document.getElementById('lbO2'),lb.series,lines2,{fmt:v=>Math.round(v),unit:'%',xkey:'t'});document.getElementById('lbO2Leg').innerHTML=(leg2||'')+(hasM?'':'<div class="src">Mischerposition erscheint ab dem nächsten Abbrand mit Live-Logger.</div>');}
+ if(cb){const leg1=multiLine(document.getElementById('lbTemp'),cb.series,[{key:'kessel',name:'Kessel',color:'--kessel'},{key:'ruecklauf',name:'Rücklauf',color:'--ruecklauf'},{key:'abgas',name:'Abgas',color:'--abgas'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'});document.getElementById('lbTempLeg').innerHTML=leg1||'';
+   const hasM=cb.series.some(r=>r.mischer!=null);const lines2=[{key:'o2',name:'O₂ %',color:'--o2'}];if(hasM)lines2.push({key:'mischer',name:'Mischer %',color:'--mischer'});
+   const leg2=multiLine(document.getElementById('lbO2'),cb.series,lines2,{fmt:v=>Math.round(v),unit:'%',xkey:'t'});document.getElementById('lbO2Leg').innerHTML=(leg2||'')+(hasM?'':'<div class="src">Mischerposition erscheint ab dem nächsten Abbrand mit Live-Logger.</div>');
+   const sel=document.getElementById('burnSel');if(sel)sel.onchange=()=>{burnIdx=+sel.value;render();};
+   const pv=document.getElementById('burnPrev');if(pv)pv.onclick=()=>{if(burnIdx>0){burnIdx--;render();}};
+   const nx=document.getElementById('burnNext');if(nx)nx.onclick=()=>{if(burnIdx<BD.length-1){burnIdx++;render();}};}
 
  if(pb){const l1=multiLine(document.getElementById('pbTemp'),pb.series,[{key:'kessel',name:'Pelletkessel',color:'--kessel'},{key:'ruecklauf',name:'Rücklauf',color:'--ruecklauf'},{key:'abgas',name:'Abgas',color:'--abgas'}],{fmt:v=>Math.round(v)+'°',unit:'°',xkey:'t'});document.getElementById('pbTempLeg').innerHTML=l1||'';
    const l2=multiLine(document.getElementById('pbStk'),pb.series,[{key:'einschub',name:'Einschub',color:'--pellet'},{key:'luftschieber',name:'Luftschieber',color:'--o2'}],{fmt:v=>Math.round(v),unit:'%',xkey:'t'});document.getElementById('pbStkLeg').innerHTML=l2||'';}
