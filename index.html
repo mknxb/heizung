@@ -121,7 +121,7 @@ function scatterChart(el,groups,{line,fmtx,fmty,ux,uy}){
 function tiles(items){return `<div class="tiles">${items.map(t=>`<div class="tile"><div class="tv"${t.c?` style="color:var(${t.c})"`:''}>${t.v}</div><div class="tl">${t.l}</div></div>`).join('')}</div>`;}
 function tcol(t){if(t==null)return '#555';const c0=[57,135,229],c1=[235,104,52];const x=Math.max(0,Math.min(1,(t-22)/(75-22)));return `rgb(${c0.map((a,i)=>Math.round(a+(c1[i]-a)*x)).join(',')})`;}
 function schema(L){
- const brennt=(L.geblaese||0)>500,pelB=(L.pel_geblaese||0)>500;
+ const brennt=(L.geblaese||0)>500,pelB=brennt&&(L.pel_einschub||0)>1; // Pellet nur bei aktivem Einschub (Gebläse ist gemeinsam)
  const P=L.puffer||[];
  const solarOn=(L.solar_pumpe&&/ein|an|^1/i.test(''+L.solar_pumpe))||(L.kollektor!=null&&P[4]!=null&&L.kollektor>P[4]+4);
  const hkOn=(L.hk_vorlauf||0)>25,fbOn=(L.fb_vorlauf||0)>25;
