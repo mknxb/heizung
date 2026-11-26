@@ -199,6 +199,9 @@ function render(){
    <div class="card"><div class="ct">Solar &amp; Heizkreise</div><div class="cs">live</div>
      ${tiles([{v:de(L.kollektor)+'°',l:'Kollektor',c:'--solar'},{v:de(L.solar_heute)+' kWh',l:'Solar heute'},{v:de(L.aussen)+'°',l:'Außen',c:'--ruecklauf'},{v:de(L.hk_vorlauf)+'°',l:'HK-Vorlauf'},{v:de(L.fb_vorlauf)+'°',l:'FB-Vorlauf'},{v:de(L.lager_vorrat)+' kg',l:'Pelletvorrat',c:'--pellet'}])}
      <div class="src">Solar gesamt (Zähler): ${de(L.solar_total)} kWh</div></div>
+   <div class="card"><div class="ct">Warmwasser &amp; Heizkreise</div><div class="cs">live · neue Felder</div>
+     ${tiles([{v:de(L.ww_puffer)+'°',l:'WW im Puffer',c:'--kessel'},{v:de(L.ww_aus)+'°',l:'WW Ausgang',c:'--kessel'},{v:de(L.hk_mischer_ist)+'°',l:'HK-Mischer Ist',c:'--mischer'},{v:de(L.fb_mischer_ist)+'°',l:'FB-Mischer Ist',c:'--mischer'},{v:de(L.wz_energie)+' kWh',l:'Wärme Holz (Zähler)',c:'--kessel'}])}
+     <div class="src">Die Felder füllen sich, sobald der neue Logger in einer neuen Tagesdatei schreibt und der Publish-Lauf sie in die JSON übernimmt.</div></div>
   </div></section>
 
  <section><div class="sec-h">Kennzahlen <span class="badge">gesamter Zeitraum ${spanTxt}</span></div><div class="grid kpis">
