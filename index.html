@@ -48,7 +48,7 @@ td.hl{color:var(--kessel);font-weight:600}
 .rays{transform-box:fill-box;transform-origin:center;animation:spin 22s linear infinite}
 @keyframes pump{to{transform:rotate(360deg)}}
 .pumpon{transform-box:fill-box;transform-origin:center;animation:pump 2.2s linear infinite}
-.schema text{font-size:12px;fill:var(--t2)}.schema .big{font-size:15px;font-weight:650;fill:var(--t1)}.schema .comp:hover{filter:brightness(1.15);cursor:default}
+.schema text{font-size:12px;fill:var(--t2)}.schema .big{font-size:15px;font-weight:650;fill:var(--t1)}.schema .comp:hover{filter:brightness(1.15);cursor:default}.schema .tlab{fill:#fff;font-size:12px;font-weight:700;paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:2px}
 .badge{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--t2);margin-left:8px}
 </style></head>
 <body><div class="wrap">
@@ -121,53 +121,79 @@ function scatterChart(el,groups,{line,fmtx,fmty,ux,uy}){
 function tiles(items){return `<div class="tiles">${items.map(t=>`<div class="tile"><div class="tv"${t.c?` style="color:var(${t.c})"`:''}>${t.v}</div><div class="tl">${t.l}</div></div>`).join('')}</div>`;}
 function tcol(t){if(t==null)return '#555';const c0=[57,135,229],c1=[235,104,52];const x=Math.max(0,Math.min(1,(t-22)/(75-22)));return `rgb(${c0.map((a,i)=>Math.round(a+(c1[i]-a)*x)).join(',')})`;}
 function schema(L){
- const brennt=(L.geblaese||0)>500,pelB=brennt&&(L.pel_einschub||0)>1; // Pellet nur bei aktivem Einschub (Gebläse ist gemeinsam)
+ const brennt=(L.geblaese||0)>500,pelB=brennt&&(L.pel_einschub||0)>1;
  const P=L.puffer||[];
  const solarOn=(L.solar_pumpe&&/ein|an|^1/i.test(''+L.solar_pumpe))||(L.kollektor!=null&&P[4]!=null&&L.kollektor>P[4]+4);
  const hkOn=(L.hk_vorlauf||0)>25,fbOn=(L.fb_vorlauf||0)>25;
  const pump=(L.kesselpumpe&&/ein|an|^1/i.test(''+L.kesselpumpe))||brennt;
- const YB='#e9b00c',YT='#f4c838',YD='#b98905',DK='#241d05',GB='#6c7074',GT='#82878c',GH='#575c60';
- const bx=392,by=66,bw=104,bh=300,sb=bh/5;let bands='';
- for(let i=0;i<5;i++)bands+=`<rect x="${bx}" y="${by+i*sb}" width="${bw}" height="${sb-1.5}" rx="3" fill="${tcol(P[i])}" opacity="0.92"/><text x="${bx+bw-8}" y="${by+i*sb+sb/2+4}" text-anchor="end" style="fill:#fff;font-size:11px">${P[i]==null?'':Math.round(P[i])+'°'}</text>`;
- const flow=(d,color,on,rev)=>`<path d="${d}" fill="none" stroke="${color}" stroke-width="7" opacity="0.22"/>${on?`<path d="${d}" fill="none" stroke="${color}" stroke-width="3.5" class="flow"${rev?' style="animation-direction:reverse"':''}/>`:''}`;
- const pumpSym=(cx,cy,on,tt)=>`<g class="comp" data-tt="${tt}"><circle cx="${cx}" cy="${cy}" r="10" fill="var(--surface2)" stroke="${on?'var(--kessel)':'var(--border)'}" stroke-width="${on?1.8:1}"/><g transform="translate(${cx},${cy})"><g class="${on?'pumpon':''}"><line x1="-6" y1="0" x2="6" y2="0" stroke="${on?'var(--kessel)':'var(--t3)'}" stroke-width="2"/><line x1="0" y1="-6" x2="0" y2="6" stroke="${on?'var(--kessel)':'var(--t3)'}" stroke-width="2"/></g></g></g>`;
- const mischSym=(cx,cy,on,tt)=>`<g class="comp" data-tt="${tt}"><circle cx="${cx}" cy="${cy}" r="10" fill="var(--surface2)" stroke="${on?'var(--mischer)':'var(--border)'}" stroke-width="${on?1.8:1}"/><path d="M${cx} ${cy-6} L${cx} ${cy} L${cx+5} ${cy+4}" fill="none" stroke="${on?'var(--mischer)':'var(--t3)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
- const flame=brennt?`<g class="flame"><path d="M116 322 q-17 -30 1 -54 q12 20 19 6 q12 24 -4 48 q-7 10 -16 0 Z" fill="var(--kessel)"/><path d="M116 318 q-10 -18 1 -34 q7 12 11 3 q7 14 -3 30 q-4 5 -10 0 Z" fill="#f5a623"/><path d="M116 314 q-4 -10 1 -18 q4 6 6 2 q4 8 -1 16 q-3 3 -6 0 Z" fill="#ffd34d"/></g>`:'';
- const glut=pelB?`<circle cx="205" cy="320" r="6" fill="var(--kessel)" class="flame"/>`:'';
- const smoke=brennt?`<g class="flame" opacity="0.5"><circle cx="150" cy="150" r="7" fill="var(--t3)"/><circle cx="156" cy="138" r="5" fill="var(--t3)" opacity="0.7"/><circle cx="148" cy="128" r="4" fill="var(--t3)" opacity="0.5"/></g>`:'';
+ const bx=400,by=70,bw=112,bh=290,sb=bh/5;
+ let bands='',tl='';
+ for(let i=0;i<5;i++){
+   bands+=`<rect x="${bx}" y="${by+i*sb}" width="${bw}" height="${sb+1}" fill="${tcol(P[i])}"/>`;
+   tl+=`<text x="${bx+bw/2}" y="${by+i*sb+sb/2+4}" text-anchor="middle" class="tlab">${P[i]==null?'':Math.round(P[i])+'°'}</text>`;
+ }
+ const flow=(d,color,on,rev)=>`<path d="${d}" fill="none" stroke="${color}" stroke-width="8" opacity="0.18"/>${on?`<path d="${d}" fill="none" stroke="${color}" stroke-width="3.5" class="flow"${rev?' style="animation-direction:reverse"':''}/>`:''}`;
+ const pumpSym=(cx,cy,on,tt)=>`<g class="comp" data-tt="${tt}"><circle cx="${cx}" cy="${cy}" r="11" fill="url(#gBody)" stroke="${on?'var(--kessel)':'var(--border)'}" stroke-width="${on?2:1}"/><g transform="translate(${cx},${cy})"><g class="${on?'pumpon':''}"><line x1="-6" y1="0" x2="6" y2="0" stroke="${on?'var(--kessel)':'var(--t3)'}" stroke-width="2.2"/><line x1="0" y1="-6" x2="0" y2="6" stroke="${on?'var(--kessel)':'var(--t3)'}" stroke-width="2.2"/></g></g></g>`;
+ const mischSym=(cx,cy,on,tt)=>`<g class="comp" data-tt="${tt}"><circle cx="${cx}" cy="${cy}" r="11" fill="url(#gBody)" stroke="${on?'var(--mischer)':'var(--border)'}" stroke-width="${on?2:1}"/><path d="M${cx} ${cy-6} L${cx} ${cy} L${cx+5} ${cy+4}" fill="none" stroke="${on?'var(--mischer)':'var(--t3)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+ const flame=brennt?`<g class="flame"><ellipse cx="116" cy="300" rx="22" ry="34" fill="url(#gFlame)"/><ellipse cx="116" cy="308" rx="10" ry="18" fill="#ffd34d"/></g>`:'';
+ const glut=pelB?`<ellipse cx="216" cy="322" rx="8" ry="6" fill="url(#gFlame)" class="flame"/>`:'';
+ const smoke=brennt?`<g class="flame" opacity="0.45"><circle cx="122" cy="132" r="7" fill="var(--t3)"/><circle cx="128" cy="120" r="5" fill="var(--t3)" opacity="0.7"/><circle cx="120" cy="110" r="4" fill="var(--t3)" opacity="0.5"/></g>`:'';
  return `<svg viewBox="0 0 760 400" class="schema">
-  <rect x="145" y="150" width="10" height="86" rx="3" fill="${GB}" stroke="${GH}"/>${smoke}
+  <defs>
+   <linearGradient id="gFront" x1="0" x2="1"><stop offset="0" stop-color="#f7c33a"/><stop offset=".55" stop-color="#e9a51b"/><stop offset="1" stop-color="#c98a0c"/></linearGradient>
+   <linearGradient id="gBody" x1="0" x2="1"><stop offset="0" stop-color="#5b6167"/><stop offset=".5" stop-color="#3e444a"/><stop offset="1" stop-color="#2a2e33"/></linearGradient>
+   <linearGradient id="gTank" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".35"/><stop offset=".22" stop-color="#fff" stop-opacity=".25"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset=".85" stop-color="#000" stop-opacity=".35"/></linearGradient>
+   <linearGradient id="gSolar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b3a6b"/><stop offset=".5" stop-color="#2a5ea8"/><stop offset="1" stop-color="#14284d"/></linearGradient>
+   <radialGradient id="gFlame" cx=".5" cy=".7" r=".6"><stop offset="0" stop-color="#fff3a0"/><stop offset=".4" stop-color="#ffa52a"/><stop offset="1" stop-color="#eb6834" stop-opacity="0"/></radialGradient>
+   <clipPath id="tankClip"><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="48"/></clipPath>
+   <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity=".4"/></filter>
+  </defs>
+  <ellipse cx="300" cy="384" rx="290" ry="8" fill="#000" opacity=".25"/>
+  <rect x="150" y="150" width="11" height="84" rx="3" fill="url(#gBody)"/>${smoke}
   ${flow(`M150 354 L150 374 L${bx} 374 L${bx} ${by+bh}`,'#eb6834',pump)}
   ${flow(`M120 116 L120 96 L${bx} 96`,'#1baf7a',solarOn)}
   ${flow(`M${bx+bw} 150 L560 150`,'#eb6834',hkOn)}
   ${flow(`M${bx+bw} 300 L560 300`,'#3987e5',fbOn)}
-  <g class="comp" data-tt="Solar-Kollektor ${de(L.kollektor)}°C${solarOn?' · Pumpe läuft':''}"><g transform="translate(96,34)"><g class="rays" opacity="${solarOn?1:0.35}">${[0,1,2,3,4,5,6,7].map(i=>`<line x1="0" y1="-16" x2="0" y2="-24" stroke="var(--solar)" stroke-width="2" transform="rotate(${i*45})"/>`).join('')}</g><circle r="11" fill="var(--solar)" opacity="${solarOn?1:0.45}"/></g><rect x="36" y="78" width="120" height="36" rx="5" fill="var(--surface2)" stroke="var(--border)"/><text x="96" y="101" text-anchor="middle">Solar ${de(L.kollektor)}°</text></g>
+  <g class="comp" data-tt="Solar-Kollektor ${de(L.kollektor)}°C${solarOn?' · Pumpe läuft':''}">
+   <g transform="translate(96,34)"><g class="rays" opacity="${solarOn?1:0.35}">${[0,1,2,3,4,5,6,7].map(i=>`<line x1="0" y1="-18" x2="0" y2="-26" stroke="var(--solar)" stroke-width="2" stroke-linecap="round" transform="rotate(${i*45})"/>`).join('')}</g><circle r="10" fill="#ffcf3a" opacity="${solarOn?1:0.45}"/></g>
+   <g filter="url(#sh)"><polygon points="40,78 150,78 170,118 60,118" fill="url(#gSolar)" stroke="#9aa4ad" stroke-width="2"/><line x1="72" y1="78" x2="82" y2="118" stroke="#8fc2ff" stroke-width=".6" opacity=".5"/><line x1="105" y1="78" x2="115" y2="118" stroke="#8fc2ff" stroke-width=".6" opacity=".5"/><line x1="138" y1="78" x2="148" y2="118" stroke="#8fc2ff" stroke-width=".6" opacity=".5"/></g>
+   <text x="105" y="140" text-anchor="middle" class="big" style="font-size:13px">Solar ${de(L.kollektor)}°</text></g>
   <g class="comp" data-tt="Stückholzkessel ${de(L.kessel)}°C · Abgas ${de(L.abgas)}°C · ${brennt&&!pelB?'brennt':(brennt?'':'bereit')}">
-   <rect x="56" y="232" width="120" height="122" rx="10" fill="${YB}" stroke="${YD}" stroke-width="1.5"/>
-   <rect x="56" y="232" width="120" height="12" rx="6" fill="${YT}"/>
-   <rect x="72" y="252" width="88" height="74" rx="6" fill="${YD}"/>
-   <rect x="78" y="258" width="76" height="62" rx="4" fill="${DK}"/>
-   ${flame}
-   <circle cx="70" cy="344" r="4.5" fill="${brennt&&!pelB?'var(--o2)':'var(--t3)'}"/>
-   <text x="120" y="224" text-anchor="middle" class="big">${de(L.kessel)}°</text>
-   <text x="118" y="347" text-anchor="middle" style="fill:#3a2e05;font-weight:600;font-size:11px">Stückholz</text>
+   <g filter="url(#sh)">
+    <rect x="40" y="232" width="128" height="128" rx="14" fill="url(#gFront)" stroke="#a8730b" stroke-width="1.2"/>
+    <rect x="168" y="240" width="26" height="120" rx="6" fill="url(#gBody)"/>
+    <rect x="50" y="240" width="108" height="8" rx="4" fill="#fff" opacity=".35"/>
+    <rect x="54" y="254" width="60" height="30" rx="5" fill="#0d0d0c" stroke="#5a4a1a"/>
+    <text x="84" y="274" text-anchor="middle" style="fill:#ffd34d;font-size:13px;font-weight:700">${de(L.kessel)}°</text>
+    <rect x="58" y="296" width="100" height="58" rx="8" fill="#15130e" stroke="#7a5a12" stroke-width="2"/>
+    <rect x="62" y="300" width="92" height="50" rx="6" fill="url(#gFlame)" opacity="${brennt&&!pelB?0.9:0.15}"/>
+    ${flame}
+    <circle cx="150" cy="350" r="4" fill="${brennt&&!pelB?'var(--o2)':'var(--t3)'}"/>
+   </g>
+   <text x="104" y="378" text-anchor="middle" style="fill:var(--t2);font-size:11px;font-weight:600">Stückholz</text>
   </g>
   <g class="comp" data-tt="Pelletmodul · ${pelB?'in Betrieb':'bereit'} · Vorrat ${de(L.lager_vorrat)} kg">
-   <path d="M182 250 L190 228 L220 228 L228 250 Z" fill="${GH}" stroke="${GH}"/>
-   <rect x="176" y="250" width="58" height="104" rx="8" fill="${GB}" stroke="${pelB?'var(--kessel)':GH}" stroke-width="${pelB?2:1}"/>
-   <rect x="176" y="250" width="58" height="10" rx="5" fill="${GT}"/>
-   <rect x="188" y="300" width="34" height="34" rx="5" fill="${GH}"/>
-   ${glut}
-   <circle cx="186" cy="344" r="4" fill="${pelB?'var(--o2)':'var(--t3)'}"/>
-   <text x="205" y="347" text-anchor="middle" style="fill:#e9e8e3;font-size:10px">Pellet</text>
-   <text x="205" y="222" text-anchor="middle" style="font-size:9.5px">Behälter</text>
+   <g filter="url(#sh)">
+    <path d="M190 258 L198 232 L232 232 L240 258 Z" fill="url(#gBody)"/>
+    <rect x="186" y="258" width="60" height="100" rx="10" fill="url(#gBody)" stroke="${pelB?'var(--kessel)':'#2a2e33'}" stroke-width="${pelB?2:1}"/>
+    <rect x="194" y="300" width="44" height="46" rx="6" fill="#15161a" stroke="#4a5058"/>
+    ${glut}
+   </g>
+   <text x="216" y="352" text-anchor="middle" style="fill:#e9e8e3;font-size:10px">Pellet</text>
+   <text x="216" y="226" text-anchor="middle" style="font-size:9.5px">Behälter</text>
   </g>
-  <g class="comp" data-tt="Förderschnecke${pelB?' · fördert Pellets':''}"><path d="M150 304 L190 304" fill="none" stroke="${pelB?'var(--pellet)':'var(--t3)'}" stroke-width="5" opacity="0.3"/>${pelB?`<path d="M150 304 L190 304" fill="none" stroke="var(--pellet)" stroke-width="3" class="flow"/>`:''}</g>
-  ${pumpSym(271,374,pump,`Kesselpumpe · ${pump?'läuft':'aus'}`)}
-  <g class="comp" data-tt="Pufferspeicher 3.000 l · Ladung ${de(L.puffer_ladung)}% · oben ${de(P[0])}° unten ${de(P[4])}°"><rect x="${bx-6}" y="${by-6}" width="${bw+12}" height="${bh+12}" rx="10" fill="none" stroke="var(--border)"/>${bands}<text x="${bx+bw/2}" y="${by-14}" text-anchor="middle">Puffer ${de(L.puffer_ladung)}%</text></g>
+  <g class="comp" data-tt="Förderschnecke${pelB?' · fördert Pellets':''}"><path d="M160 306 L194 306" fill="none" stroke="${pelB?'var(--pellet)':'var(--t3)'}" stroke-width="5" opacity="0.3"/>${pelB?`<path d="M160 306 L194 306" fill="none" stroke="var(--pellet)" stroke-width="3" class="flow"/>`:''}</g>
+  ${pumpSym(272,374,pump,`Kesselpumpe · ${pump?'läuft':'aus'}`)}
+  <g class="comp" data-tt="Pufferspeicher 3.000 l · Ladung ${de(L.puffer_ladung)}% · oben ${de(P[0])}° unten ${de(P[4])}°">
+   <rect x="${bx-6}" y="${by-6}" width="${bw+12}" height="${bh+12}" rx="54" fill="none" stroke="var(--border)"/>
+   <g clip-path="url(#tankClip)">${bands}<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#gTank)"/></g>
+   ${tl}
+   <text x="${bx+bw/2}" y="${by-14}" text-anchor="middle">Puffer ${de(L.puffer_ladung)}%</text>
+  </g>
+  <g class="comp" data-tt="Warmwasser im Puffer ${de(L.ww_puffer)}° · Ausgang ${de(L.ww_aus)}°"><path d="M${bx+bw} 118 L${bx+bw+26} 118" stroke="#c0392b" stroke-width="4"/><circle cx="${bx+bw+30}" cy="118" r="5" fill="#c0392b"/><text x="${bx+bw+34}" y="122" style="font-size:11px;fill:var(--t2)">WW ${de(L.ww_aus)}°</text></g>
   ${mischSym(528,150,hkOn,`Mischer Heizkörper · ${de(L.mischer_pos)}%`)}
-  <g class="comp" data-tt="Heizkörper-Vorlauf ${de(L.hk_vorlauf)}°C"><rect x="560" y="120" width="110" height="60" rx="6" fill="var(--surface2)" stroke="var(--border)"/>${[0,1,2,3].map(i=>`<line x1="${578+i*22}" y1="128" x2="${578+i*22}" y2="172" stroke="var(--kessel)" stroke-width="3" opacity="${hkOn?0.9:0.3}"/>`).join('')}<text x="615" y="198" text-anchor="middle">HK ${de(L.hk_vorlauf)}°</text></g>
-  <g class="comp" data-tt="Fußboden-Vorlauf ${de(L.fb_vorlauf)}°C"><rect x="560" y="270" width="110" height="60" rx="6" fill="var(--surface2)" stroke="var(--border)"/><path d="M570 300 q14 -14 28 0 q14 14 28 0 q14 -14 28 0" fill="none" stroke="var(--ruecklauf)" stroke-width="3" opacity="${fbOn?0.9:0.3}"/><text x="615" y="348" text-anchor="middle">FB ${de(L.fb_vorlauf)}°</text></g>
+  <g class="comp" data-tt="Heizkörper-Vorlauf ${de(L.hk_vorlauf)}°C"><rect x="560" y="120" width="110" height="60" rx="8" fill="url(#gBody)" stroke="var(--border)"/>${[0,1,2,3].map(i=>`<rect x="${576+i*22}" y="128" width="8" height="44" rx="3" fill="var(--kessel)" opacity="${hkOn?0.95:0.3}"/>`).join('')}<text x="615" y="198" text-anchor="middle">HK ${de(L.hk_vorlauf)}°</text></g>
+  <g class="comp" data-tt="Fußboden-Vorlauf ${de(L.fb_vorlauf)}°C"><rect x="560" y="270" width="110" height="60" rx="8" fill="url(#gBody)" stroke="var(--border)"/><path d="M570 300 q14 -14 28 0 q14 14 28 0 q14 -14 28 0" fill="none" stroke="var(--ruecklauf)" stroke-width="3.5" opacity="${fbOn?0.95:0.3}"/><text x="615" y="348" text-anchor="middle">FB ${de(L.fb_vorlauf)}°</text></g>
   <text x="712" y="30" text-anchor="end" class="big">${de(L.aussen)}°</text><text x="712" y="46" text-anchor="end">außen</text>
  </svg>`;
 }
