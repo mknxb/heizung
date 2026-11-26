@@ -137,7 +137,7 @@ function schema(L){
  const mischSym=(cx,cy,on,tt)=>`<g class="comp" data-tt="${tt}"><circle cx="${cx}" cy="${cy}" r="11" fill="url(#gBody)" stroke="${on?'var(--mischer)':'var(--border)'}" stroke-width="${on?2:1}"/><path d="M${cx} ${cy-6} L${cx} ${cy} L${cx+5} ${cy+4}" fill="none" stroke="${on?'var(--mischer)':'var(--t3)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
  const flame=brennt?`<g class="flame"><ellipse cx="116" cy="300" rx="22" ry="34" fill="url(#gFlame)"/><ellipse cx="116" cy="308" rx="10" ry="18" fill="#ffd34d"/></g>`:'';
  const glut=pelB?`<ellipse cx="216" cy="322" rx="8" ry="6" fill="url(#gFlame)" class="flame"/>`:'';
- const smoke=brennt?`<g class="flame" opacity="0.45"><circle cx="96" cy="104" r="6" fill="var(--t3)"/><circle cx="101" cy="92" r="5" fill="var(--t3)" opacity="0.7"/><circle cx="95" cy="82" r="4" fill="var(--t3)" opacity="0.5"/></g>`:'';
+ const smoke=brennt?`<g class="flame" opacity="0.45"><circle cx="94" cy="138" r="5" fill="var(--t3)"/><circle cx="99" cy="126" r="4" fill="var(--t3)" opacity="0.7"/><circle cx="93" cy="115" r="3" fill="var(--t3)" opacity="0.5"/></g>`:'';
  const sun=solarOn?1:0.45;
  return `<svg viewBox="0 0 760 400" class="schema">
   <defs>
@@ -151,10 +151,9 @@ function schema(L){
   </defs>
   <ellipse cx="380" cy="394" rx="360" ry="5" fill="#000" opacity=".25"/>
   <g class="comp" data-tt="Solar-Kollektor ${de(L.kollektor)}°C${solarOn?' · Pumpe läuft':''}">
-   <g class="rays" opacity="${sun}" transform="translate(236,40)">${[0,1,2,3,4,5,6,7].map(i=>`<line x1="0" y1="-16" x2="0" y2="-23" stroke="var(--solar)" stroke-width="2" stroke-linecap="round" transform="rotate(${i*45})"/>`).join('')}</g>
-   <circle cx="236" cy="40" r="9" fill="#ffcf3a" opacity="${sun}"/>
+   <g transform="translate(206,36)"><g class="rays" opacity="${sun}">${[0,1,2,3,4,5,6,7].map(i=>`<line x1="0" y1="-16" x2="0" y2="-23" stroke="var(--solar)" stroke-width="2" stroke-linecap="round" transform="rotate(${i*45})"/>`).join('')}</g><circle r="9" fill="#ffcf3a" opacity="${sun}"/></g>
    <g filter="url(#sh)"><polygon points="260,22 380,22 400,62 280,62" fill="url(#gSolar)" stroke="#9aa4ad" stroke-width="2"/><line x1="292" y1="22" x2="302" y2="62" stroke="#8fc2ff" stroke-width=".6" opacity=".5"/><line x1="330" y1="22" x2="340" y2="62" stroke="#8fc2ff" stroke-width=".6" opacity=".5"/><line x1="368" y1="22" x2="378" y2="62" stroke="#8fc2ff" stroke-width=".6" opacity=".5"/></g>
-   <text x="330" y="80" text-anchor="middle" class="big" style="font-size:13px">Solar ${de(L.kollektor)}°</text></g>
+   <text x="330" y="16" text-anchor="middle" class="big" style="font-size:13px">Solar ${de(L.kollektor)}°</text></g>
   ${flow(`M340 62 L340 ${by-6}`,'#1baf7a',solarOn)}
   <rect x="88" y="150" width="12" height="82" rx="3" fill="url(#gBody)"/>${smoke}
   <g class="comp" data-tt="Stückholzkessel ${de(L.kessel)}°C · Abgas ${de(L.abgas)}°C · ${brennt&&!pelB?'brennt':(brennt?'':'bereit')}">
@@ -188,7 +187,7 @@ function schema(L){
    <rect x="${bx-6}" y="${by-6}" width="${bw+12}" height="${bh+12}" rx="56" fill="none" stroke="var(--border)"/>
    <g clip-path="url(#tankClip)">${bands}<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#gTank)"/></g>
    ${tl}
-   <text x="${bx+bw/2}" y="${by-16}" text-anchor="middle">Puffer ${de(L.puffer_ladung)}%</text>
+   <text x="${bx+bw/2}" y="${by+bh-6}" text-anchor="middle" class="tlab" style="font-size:11px">Ladung ${de(L.puffer_ladung)}%</text>
   </g>
   <g class="comp" data-tt="Warmwasser am Pufferausgang ${de(L.ww_puffer)}° · Ausgang ${de(L.ww_aus)}°">
    <path d="M${bx+bw} 150 L462 150" stroke="#c0392b" stroke-width="4" stroke-linecap="round"/>
