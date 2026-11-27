@@ -130,13 +130,16 @@ function ptcol(t){const S=[[25,[36,100,255]],[40,[64,140,255]],[52,[170,110,150]
  if(t<=S[0][0])return 'rgb('+S[0][1]+')';
  for(let i=1;i<S.length;i++){if(t<=S[i][0]){const a=S[i-1],b=S[i],k=(t-a[0])/(b[0]-a[0]);return 'rgb('+[0,1,2].map(j=>Math.round(a[1][j]+(b[1][j]-a[1][j])*k)).join(',')+')';}}
  return 'rgb('+S[S.length-1][1]+')';}
+function isStale(L){const t=Date.parse((L.ts||'').replace(' ','T'));return !t||(Date.now()-t)>90*60000;}
+function tsTxt(L){const m=/(\d{4})-(\d\d)-(\d\d)[ T](\d\d:\d\d)/.exec(L.ts||'');return m?m[3]+'.'+m[2]+'. '+m[4]:'unbekannt';}
 function schema(L){
- const brennt=(L.geblaese||0)>500,pelB=brennt&&(L.pel_einschub||0)>1;
+ const old=isStale(L);
+ const brennt=!old&&(L.geblaese||0)>500,pelB=brennt&&(L.pel_einschub||0)>1;
  const P=(L.puffer||[]).slice();
- const solarOn=!!((L.solar_pumpe&&/ein|an|^1/i.test(''+L.solar_pumpe))||(L.kollektor!=null&&P[4]!=null&&L.kollektor>P[4]+4));
- const hkOn=(L.hk_vorlauf||0)>25,fbOn=(L.fb_vorlauf||0)>25;
- const kOn=!!((L.kesselpumpe&&/ein|an|^1/i.test(''+L.kesselpumpe))||brennt);
- const holzOn=kOn&&!pelB,pelOn=kOn&&pelB,wwOn=(L.ww_aus||0)>35;
+ const solarOn=!old&&!!((L.solar_pumpe&&/ein|an|^1/i.test(''+L.solar_pumpe))||(L.kollektor!=null&&P[4]!=null&&L.kollektor>P[4]+4));
+ const hkOn=!old&&(L.hk_vorlauf||0)>25,fbOn=!old&&(L.fb_vorlauf||0)>25;
+ const kOn=!old&&!!((L.kesselpumpe&&/ein|an|^1/i.test(''+L.kesselpumpe))||brennt);
+ const holzOn=kOn&&!pelB,pelOn=kOn&&pelB,wwOn=!old&&(L.ww_aus||0)>35;
  const YS=[146,180,214,248,282];
  let last=20;const T=[0,1,2,3,4].map(i=>{if(P[i]!=null)last=P[i];return last;});
  const stops=`<stop offset="0" stop-color="${ptcol(T[0])}"/>`+T.map((t,i)=>`<stop offset="${((YS[i]-101)/334).toFixed(3)}" stop-color="${ptcol(t)}"/>`).join('')+`<stop offset="1" stop-color="${ptcol(T[4])}"/>`;
@@ -164,6 +167,7 @@ function schema(L){
  <rect x="30" width="890" height="516" fill="url(#sWall)"/><rect x="30" width="890" height="516" fill="url(#sSpot)"/>
  <rect x="30" y="488" width="890" height="28" fill="url(#sFloor)"/><line x1="30" y1="488" x2="920" y2="488" stroke="#4a4c50" opacity=".6"/>
  <text x="535" y="44" text-anchor="middle" fill="#c9c8c1" font-size="16">Pufferspeicher</text>
+ ${old?`<g><rect x="48" y="8" width="330" height="30" rx="15" fill="#3a2a12" stroke="#eda100"/><text x="213" y="28" text-anchor="middle" fill="#ffd27a" font-size="15" font-weight="600">Daten vom ${tsTxt(L)} – nicht aktuell</text></g>`:''}
 
  ${pipe('M113 180 L113 66 L256 66',1,pelOn)}${pipe('M256 130 L256 66',1,holzOn)}${pipe('M256 66 L505 66 L505 100',1,kOn)}
  ${pipe('M450 410 L352 410',0,kOn)}${pipe('M352 410 L322 410',0,holzOn)}
@@ -253,18 +257,18 @@ function render(){
  if(burnIdx==null||burnIdx>=BD.length)burnIdx=BD.length-1;
  const cb=BD[burnIdx]||null;
  const spanTxt=(D.span.start||'').slice(0,7)+' – '+(D.span.end||'').slice(0,7);
- document.getElementById('period').innerHTML=`<span class="dot"></span>Stand ${L.ts||D.generated} · Daten ${D.span.start} – ${D.span.end}`;
+ document.getElementById('period').innerHTML=`<span class="dot"${isStale(L)?' style="background:var(--pellet)"':''}></span>Stand ${L.ts||D.generated} · Daten ${D.span.start} – ${D.span.end}`;
  const HW=D.hinweise||[];
  const sens=['Fühler 1 (oben)','Fühler 2','Fühler 3','Fühler 4','Fühler 5 (unten)'];
  const tp=L.puffer||[],vv=tp.filter(x=>x!=null),mx=Math.max(...vv,70),mn=20;
  const strat=sens.map((n,i)=>{const t=tp[i];if(t==null)return'';const w=Math.max((t-mn)/(mx-mn)*100,4);
    return `<div class="layer"><span class="ln">${n}</span><div class="lbar" style="width:${w}%;background:linear-gradient(90deg,var(--ruecklauf),var(--kessel));opacity:${0.35+0.65*(t-mn)/(mx-mn)}"></div><span class="lt">${de(t)}°</span></div>`;}).join('');
- const brennt=(L.geblaese||0)>500;
+ const old=isStale(L),brennt=!old&&(L.geblaese||0)>500;
  let html='';
  if(HW.length){html+=`<section><div class="sec-h">Hinweise</div><div class="grid" style="gap:10px">${HW.map(h=>{const lv=LVL[h.level]||LVL.info;return `<div class="card" style="border-left:3px solid var(${lv[0]});padding:12px 16px;display:flex;gap:11px;align-items:center"><span style="color:var(${lv[0]});font-weight:700;font-size:16px">${lv[1]}</span><span style="font-size:13.5px;color:var(--t2)">${h.text}</span></div>`;}).join('')}</div></section>`;}
  html+=`
  <section><div class="sec-h">Anlage · live</div><div class="card" style="padding:10px">${schema(L)}</div></section>
- <section><div class="sec-h">Live-Zustand ${brennt?'<span class="badge" style="color:var(--kessel)">Kessel brennt</span>':'<span class="badge">Bereit</span>'}</div>
+ <section><div class="sec-h">Live-Zustand ${old?'<span class="badge" style="color:var(--pellet)">Daten veraltet · '+tsTxt(L)+'</span>':brennt?'<span class="badge" style="color:var(--kessel)">Kessel brennt</span>':'<span class="badge">Bereit</span>'}</div>
   <div class="grid g3">
    <div class="card"><div class="ct">Pufferschichtung · 5 Fühler</div><div class="cs">Ladung ${de(L.puffer_ladung)} %</div><div class="strat">${strat||'<div class=src>–</div>'}</div></div>
    <div class="card"><div class="ct">Kessel &amp; Betrieb</div><div class="cs">live</div>
